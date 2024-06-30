@@ -45,26 +45,65 @@ def remove_team_members(events, user_email_domain):
     return [event for event in events if user_email_domain not in event[1]]
 
 # Mapping each contact sentiment by reading csv file from email_sentiment_analysis.py
+# def mapping_sentiment(events, sentiment_csv):
+#     final_events = []
+#     sentiment_df = pd.read_csv(sentiment_csv)
+#     for event in events:
+#         email = event[1]
+#         if email in sentiment_df['email'].values:
+#             sentiment = sentiment_df[sentiment_df['email'] == email]['sentiment_analysis'].values[0]
+#             if sentiment.lower() != 'negative':
+#                 final_events.append((event[0], email, sentiment))
+#         else:
+#             final_events.append((event[0], email, 'no sentiment'))
+
+#     #Define sorting key
+#     def sentiment_sort_key(event):
+#         sentiment_priority = {'positive': 1, 'neutral': 2, 'no sentiment': 3}
+#         return sentiment_priority.get(event[2].lower(), 4)
+    
+#     # Sort the events based on the defined key
+#     final_events.sort(key=sentiment_sort_key)
+#     return final_events
+
 def mapping_sentiment(events, sentiment_csv):
     final_events = []
     sentiment_df = pd.read_csv(sentiment_csv)
+
+    # Create a set of emails that have calendar meetings
+    meeting_emails = {event[1] for event in events}
+    for index, row in sentiment_df.iterrows():
+        # first_name = row['first_name']
+        # last_name = row['last_name']
+        email = row['email']
+        sentiment = row['sentiment_analysis'].lower()
+        has_calendar_meeting = email in meeting_emails
+        final_events.append((email, sentiment, has_calendar_meeting))
+
+    # Add entries from the events that are not in the sentiment file
+    sentiment_emails = set(sentiment_df['email'])
     for event in events:
         email = event[1]
-        if email in sentiment_df['email'].values:
-            sentiment = sentiment_df[sentiment_df['email'] == email]['sentiment_analysis'].values[0]
-            if sentiment.lower() != 'negative':
-                final_events.append((event[0], email, sentiment))
-        else:
-            final_events.append((event[0], email, 'no sentiment'))
+        if email not in sentiment_emails:
+            final_events.append((email, 'no email contact no sentiment', True))
 
-    #Define sorting key
+    # Define sorting key
     def sentiment_sort_key(event):
-        sentiment_priority = {'positive': 1, 'neutral': 2, 'no sentiment': 3}
-        return sentiment_priority.get(event[2].lower(), 4)
+        sentiment_priority = {
+            ('positive', True): 1,
+            ('neutral', True): 2,
+            ('positive', False): 3,
+            ('no email contact no sentiment', True):4,
+            ('neutral', False): 5,
+            ('negative', True): 6,
+            ('negative', False): 7
+        }
+        return sentiment_priority.get((event[1], event[2]), 9)
     
     # Sort the events based on the defined key
     final_events.sort(key=sentiment_sort_key)
     return final_events
+
 
 # Main function
 def email_calendar_data_agent(ics_file, user_email, output_csv, sentiment_csv):
@@ -76,20 +115,21 @@ def email_calendar_data_agent(ics_file, user_email, output_csv, sentiment_csv):
     one_on_one_meetings = remove_group_meetings(past_year_events)
     one_on_one_meeting_contact = keep_other_person_email(one_on_one_meetings, user_email)
     outsider_meetings = remove_team_members(one_on_one_meeting_contact, user_email_domain)
-    final_contacts = mapping_sentiment(outsider_meetings, sentiment_csv)
-    print(final_contacts)
+    final_events = mapping_sentiment(outsider_meetings, sentiment_csv)
+    for event in final_events:
+        print(event)
     
     # Convert to DataFrame
-    df = pd.DataFrame(final_contacts, columns=['Time', 'Contact','Sentiment'])
+    df = pd.DataFrame(final_events, columns=['email', 'sentiment', 'has_calendar_meeting'])
     
     # Save to CSV
     df.to_csv(output_csv, index=False)
     print(f"CSV file saved to {output_csv}")
 
 # update use's files name and email address
-ics_file = 'user_ics_file_name.ics'
-user_email = 'user_email_address'
-output_csv = 'one_on_one_meetings.csv'   
-sentiment_csv = "sentiment_csv_file_name.csv"
+ics_file = 'stellahuan2@gmail.com.ics'
+user_email = 'stellahuan2@gmail.com'
+output_csv = 'email_calendar_data_agent.csv'   
+sentiment_csv = "contact_sentiment.csv"
 
 email_calendar_data_agent(ics_file, user_email, output_csv, sentiment_csv)
