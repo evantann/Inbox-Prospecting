@@ -8,7 +8,7 @@ output: csv file with contact first name, contact last name, contact email addre
 
 # email_calendar_data_agent.py
 Input: user's google calendar .ics file, user's email address, email_sentiment_analysis.csv file
-output: one_on_one meetings.csv file with time, contact email address, sentiment
+output: email_calendar_data_agent.csv file with contact email address, sentiment, and has_calendar_meeting
 
 # Steps:
 1. Install the Groq and icalendar Python library before starting: 
