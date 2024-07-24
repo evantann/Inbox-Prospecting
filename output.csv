@@ -1,227 +1,48 @@
-first_name,last_name,email,message1,message2,message3,combined_message,sentiment_analysis,summary_relationship
-Brooke,Williams,brooke.williams@ringcentral.com,"Hi Evan, I will give you a call Friday at 1pm PT. Is (909) 569 2358 the best number to reach you?
+first_name,last_name,email,message1,message2,message3,message4,combined_message,sentiment_analysis,summary_relationship
+Alice,Wonderland,alice@example.com,"Hi User,
 
-Thank you,
-Brooke Williams
-She/Her/Hers
-University recruitment programs specialist
-Connect with me: +1-980-495-2049
-brooke.williams@ringcentral.com<mailto:brooke.williams@ringcentral.com>
-[cid:image001.png@01DA8670.C3EBA370]<http://go.ringcentral.com/>
+It’s been a while. Let’s catch up soon.
 
+Cheers,
+Alice
+","Hi User,
 
-From: Evan Tan <evant5252@gmail.com>
-Sent: Wednesday, April 3, 2024 8:37 PM
-To: Brooke Williams <brooke.williams@ringcentral.com>
-Subject: Re: RingCentral Internship Follow Up
+Next week works for me. Let’s set a date.
 
-[EXTERNAL]
-Hello Brooke,
+Cheers,
+Alice
+","Hi User,
 
-Thanks for reaching out! I am busy Thursday but am available this Friday anytime after 12 PM. Let me know if this works for you! I look forward to our conversation.
+Wednesday at 3 PM works great. See you then!
 
-Sincerely,
-Evan
+Cheers,
+Alice
+","Hi User,
 
-On Wed, Apr 3, 2024 at 6:20 AM Brooke Williams <brooke.williams@ringcentral.com<mailto:brooke.williams@ringcentral.com>> wrote:
-Hi Evan,
+Looking forward to our meeting!
 
-Thank you for your interest in our IT infrastructure internship! I would love to set up a time this week for us to connect and go through your background and what you are looking for in an internship. Please let me know what times you would be available and I will get a call scheduled.
+Cheers,
+Alice","Hi User,
 
-Let me know if you have any questions in the meantime.
+It’s been a while. Let’s catch up soon.
 
-Thank you,
-Brooke Williams
-She/Her/Hers
-University recruitment programs specialist
-Connect with me: +1-980-495-2049
-brooke.williams@ringcentral.com<mailto:brooke.williams@ringcentral.com>
-[cid:image001.png@01DA8670.C3EBA370]<http://go.ringcentral.com/>
+Cheers,
+Alice
+ Hi User,
 
+Next week works for me. Let’s set a date.
 
-","Hi Evan,
+Cheers,
+Alice
+ Hi User,
 
-Thank you for your interest in our IT infrastructure internship! I would love to set up a time this week for us to connect and go through your background and what you are looking for in an internship. Please let me know what times you would be available and I will get a call scheduled.
+Wednesday at 3 PM works great. See you then!
 
-Let me know if you have any questions in the meantime.
+Cheers,
+Alice
+ Hi User,
 
-Thank you,
-Brooke Williams
-She/Her/Hers
-University recruitment programs specialist
-Connect with me: +1-980-495-2049
-brooke.williams@ringcentral.com<mailto:brooke.williams@ringcentral.com>
-[cid:image001.png@01DA85A8.21ED9830]<http://go.ringcentral.com/>
+Looking forward to our meeting!
 
-
-","Hi Evan, thank you for following up! I would like to set you up with the team for an interview this week. Please let me know your availability for a 30 minute video interview and I will get that scheduled.
-
-Thank you,
-Brooke Williams
-She/Her/Hers
-University recruitment programs specialist
-Connect with me: +1-980-495-2049
-brooke.williams@ringcentral.com<mailto:brooke.williams@ringcentral.com>
-[cid:image001.png@01DA8999.D3ED3230]<http://go.ringcentral.com/>
-
-
-From: Evan Tan <evant5252@gmail.com>
-Sent: Sunday, April 7, 2024 1:55 PM
-To: Brooke Williams <brooke.williams@ringcentral.com>
-Subject: Thank you for your time
-
-[EXTERNAL]
-Hello Brooke,
-
-I wanted to thank you for taking the time to speak with me during my interview this past Friday. It was great learning more about the position and the team I'd be working with.
-
-I am very excited about the opportunity to work with the Ring Central IT team. Our discussion reinforced my belief that my background aligns with the goals of the company and I think my skills fit the qualifications of this position.
-
-Thank you once again for considering my application. I hope to hear from you soon!
-
-Sincerely,
-
-Evan Tan
-","Hi Evan, I will give you a call Friday at 1pm PT. Is (909) 569 2358 the best number to reach you?
-
-Thank you,
-Brooke Williams
-She/Her/Hers
-University recruitment programs specialist
-Connect with me: +1-980-495-2049
-brooke.williams@ringcentral.com<mailto:brooke.williams@ringcentral.com>
-[cid:image001.png@01DA8670.C3EBA370]<http://go.ringcentral.com/>
-
-
-From: Evan Tan <evant5252@gmail.com>
-Sent: Wednesday, April 3, 2024 8:37 PM
-To: Brooke Williams <brooke.williams@ringcentral.com>
-Subject: Re: RingCentral Internship Follow Up
-
-[EXTERNAL]
-Hello Brooke,
-
-Thanks for reaching out! I am busy Thursday but am available this Friday anytime after 12 PM. Let me know if this works for you! I look forward to our conversation.
-
-Sincerely,
-Evan
-
-On Wed, Apr 3, 2024 at 6:20 AM Brooke Williams <brooke.williams@ringcentral.com<mailto:brooke.williams@ringcentral.com>> wrote:
-Hi Evan,
-
-Thank you for your interest in our IT infrastructure internship! I would love to set up a time this week for us to connect and go through your background and what you are looking for in an internship. Please let me know what times you would be available and I will get a call scheduled.
-
-Let me know if you have any questions in the meantime.
-
-Thank you,
-Brooke Williams
-She/Her/Hers
-University recruitment programs specialist
-Connect with me: +1-980-495-2049
-brooke.williams@ringcentral.com<mailto:brooke.williams@ringcentral.com>
-[cid:image001.png@01DA8670.C3EBA370]<http://go.ringcentral.com/>
-
-
- Hi Evan,
-
-Thank you for your interest in our IT infrastructure internship! I would love to set up a time this week for us to connect and go through your background and what you are looking for in an internship. Please let me know what times you would be available and I will get a call scheduled.
-
-Let me know if you have any questions in the meantime.
-
-Thank you,
-Brooke Williams
-She/Her/Hers
-University recruitment programs specialist
-Connect with me: +1-980-495-2049
-brooke.williams@ringcentral.com<mailto:brooke.williams@ringcentral.com>
-[cid:image001.png@01DA85A8.21ED9830]<http://go.ringcentral.com/>
-
-
- Hi Evan, thank you for following up! I would like to set you up with the team for an interview this week. Please let me know your availability for a 30 minute video interview and I will get that scheduled.
-
-Thank you,
-Brooke Williams
-She/Her/Hers
-University recruitment programs specialist
-Connect with me: +1-980-495-2049
-brooke.williams@ringcentral.com<mailto:brooke.williams@ringcentral.com>
-[cid:image001.png@01DA8999.D3ED3230]<http://go.ringcentral.com/>
-
-
-From: Evan Tan <evant5252@gmail.com>
-Sent: Sunday, April 7, 2024 1:55 PM
-To: Brooke Williams <brooke.williams@ringcentral.com>
-Subject: Thank you for your time
-
-[EXTERNAL]
-Hello Brooke,
-
-I wanted to thank you for taking the time to speak with me during my interview this past Friday. It was great learning more about the position and the team I'd be working with.
-
-I am very excited about the opportunity to work with the Ring Central IT team. Our discussion reinforced my belief that my background aligns with the goals of the company and I think my skills fit the qualifications of this position.
-
-Thank you once again for considering my application. I hope to hear from you soon!
-
-Sincerely,
-
-Evan Tan
-",positive,"You have a professional and cordial relationship with Brooke Williams, a university recruitment programs specialist at RingCentral, who is guiding you through the internship application process and has conducted an interview with you."
-Jenn,Emery,jemery@golden1.com,"Hello!
-
-My apologies for the delayed response I have been out of office unexpectedly, but I appreciate your patience. Thank you for applying for an internship this summer with Golden 1. We were impressed by your skills and experience, and it's clear that you are passionate and dedicated to your field. After careful consideration, we regret to inform you that you were not selected to continue to move forward in the process at this time.
-
-We know this news might be disappointing, and we want you to know that our decision wasn't easy. We had many talented candidates, and ultimately, we could not accommodate everyone. However, this should not be seen as a reflection of your abilities or potential. We encourage you to keep pursuing your goals, as you have a promising future ahead.
-
-If you're open to it, we would love to keep your application on file for any future opportunities or other roles at Golden 1!
-
-Thank you again for your interest in our program, and we wish you the best in your future endeavors!
-
-Best,
-Jenn
-
-[Golden-1-revised (3)]
-Jenn Emery | HR Program Manager DEI Culture and Talent | Human Resource Administration
-Golden 1 Credit Union
-8945 Cal Center Drive
-Sacramento, CA 95826
-T: 916-732-2826
-E: jemery@golden1.com<jemery@golden1.com%20>
-W: golden1.com<www.golden1.com>
-
-[cid:image002.jpg@01DAA131.0F8D2A30]
-[cid:image003.png@01DAA131.0F8D2A30]
-
-
-NOTICE: This email and any attachments are confidential and may also be privileged. If you are not the intended recipient, please notify the sender immediately and delete this message from your system. Any unauthorized use or disclosure of the content of this email is strictly prohibited.
-
-If you need to send confidential or sensitive information, please request a secure channel from us. Golden 1 Credit Union is not liable for any damage or loss arising from your transmission of confidential or sensitive information via email. Golden 1 Credit Union reserves the right to intercept, monitor, and retain e-mail messages to and from its systems as permitted by applicable law. For information about our collection and use of personal information, view our privacy policy here<https://www.golden1.com/terms-and-conditions/privacy-and-security>.
-",,,"Hello!
-
-My apologies for the delayed response I have been out of office unexpectedly, but I appreciate your patience. Thank you for applying for an internship this summer with Golden 1. We were impressed by your skills and experience, and it's clear that you are passionate and dedicated to your field. After careful consideration, we regret to inform you that you were not selected to continue to move forward in the process at this time.
-
-We know this news might be disappointing, and we want you to know that our decision wasn't easy. We had many talented candidates, and ultimately, we could not accommodate everyone. However, this should not be seen as a reflection of your abilities or potential. We encourage you to keep pursuing your goals, as you have a promising future ahead.
-
-If you're open to it, we would love to keep your application on file for any future opportunities or other roles at Golden 1!
-
-Thank you again for your interest in our program, and we wish you the best in your future endeavors!
-
-Best,
-Jenn
-
-[Golden-1-revised (3)]
-Jenn Emery | HR Program Manager DEI Culture and Talent | Human Resource Administration
-Golden 1 Credit Union
-8945 Cal Center Drive
-Sacramento, CA 95826
-T: 916-732-2826
-E: jemery@golden1.com<jemery@golden1.com%20>
-W: golden1.com<www.golden1.com>
-
-[cid:image002.jpg@01DAA131.0F8D2A30]
-[cid:image003.png@01DAA131.0F8D2A30]
-
-
-NOTICE: This email and any attachments are confidential and may also be privileged. If you are not the intended recipient, please notify the sender immediately and delete this message from your system. Any unauthorized use or disclosure of the content of this email is strictly prohibited.
-
-If you need to send confidential or sensitive information, please request a secure channel from us. Golden 1 Credit Union is not liable for any damage or loss arising from your transmission of confidential or sensitive information via email. Golden 1 Credit Union reserves the right to intercept, monitor, and retain e-mail messages to and from its systems as permitted by applicable law. For information about our collection and use of personal information, view our privacy policy here<https://www.golden1.com/terms-and-conditions/privacy-and-security>.
-",neutral,"The tone of this email indicates a polite and respectful, yet professional and formal, rejection of the recipient's internship application, with the door left open for potential future opportunities."
+Cheers,
+Alice",positive,"The tone of the email exchange suggests a friendly and familiar relationship between the user and Alice, with a history of positive interactions and a sense of enthusiasm for their upcoming meeting."

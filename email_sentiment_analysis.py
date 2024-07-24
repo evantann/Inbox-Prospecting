@@ -1,10 +1,12 @@
-import mailbox
 import re
-import csv
-import pandas as pd
-from collections import defaultdict
 import os
+import mailbox
+import pandas as pd
 from groq import Groq
+from dotenv import load_dotenv
+from collections import defaultdict
+
+load_dotenv()
 
 # check if it's marketing and promotional email using common marketing keyword filters and sender domain
 def is_marketing_email(subject, from_address):
@@ -110,6 +112,7 @@ def close_contacts(emails):
     for K, V in sent_counts.items():
         if(V >= 3):
             close_contacts_email.append(K)
+
     return close_contacts_email
 
 # filter emails to exclude marketing email and non-personal email
@@ -123,7 +126,7 @@ def filter_emails(emails):
         if is_non_personal_email(email['Subject'], email['From']):
             continue
         if email['From']:
-            if("Alice <alice@example.com>" not in ['Alice <alice@example.com>']):
+            if(email['From'] not in close_contacts(emails)):
                 continue
     
         filtered_emails.append(email)
@@ -166,7 +169,6 @@ def transform_emails(emails):
     df = pd.DataFrame(emails)
     # drop "subject",'From' ,'To' columns
     df.drop(columns=['Subject', 'From' ,'To'], inplace=True)
-    print(df)
     # Group by email address and collect email bodies
     grouped = df.groupby(['first_name', 'last_name', 'email'])['Body'].apply(list).reset_index()
 
@@ -240,7 +242,6 @@ def groq_summary_relationship(emails):
         stream=False,
         stop=None,
         )
-        # print(chat_completion.choices[0].message.content)
         new_item = email.copy()
         new_item['summary_relationship'] = chat_completion.choices[0].message.content
         summary_emails.append(new_item)
@@ -266,12 +267,11 @@ def convert_mbox_to_csv(mbox_file, output_file):
 # update user's mbox file and email address 
 mbox_file = 'dev.mbox'
 my_email = 'user@example.com'
-output_file = 'output2.csv'
+output_file = 'output.csv'
 
 
 client = Groq(
-    api_key = "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"
-    # api_key = os.environ.get("GROQ_API_KEY"),
+    api_key = os.getenv("GROQ_API_KEY"),
 )
 
 convert_mbox_to_csv(mbox_file, output_file)
