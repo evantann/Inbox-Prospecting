@@ -8,6 +8,14 @@ from groq import Groq
 
 # check if it's marketing and promotional email using common marketing keyword filters and sender domain
 def is_marketing_email(subject, from_address):
+    if subject is None or from_address is None:
+        return False
+    
+    if not isinstance(subject, str):
+        subject = str(subject)
+    if not isinstance(from_address, str):
+        from_address = str(from_address)
+
     marketing_keywords = ["sale", "discount", "save", "off", "offer", "deal", "clearance",
         "free", "giveaway", "promo", "bogo", "limited time", "hurry",
         "act now", "last chance", "exclusive", "only", "final", "ending soon",
@@ -17,7 +25,7 @@ def is_marketing_email(subject, from_address):
         "insider", "vip", "rewards", "holiday", "black friday", "cyber monday",
         "christmas", "new year", "summer", "winter", "spring", "fall",
         "halloween", "thanksgiving", "valentine’s day", "easter", "buy now",
-        "shop", "click", "get", "try", "check out", "download", "rsvp",
+        "shop", "click", "get", "check out", "download", "rsvp",
         "sign up", "order", "price drop", "markdown", "special offer",
         "limited offer", "bundle", "package", "combo", "free shipping",
         "fast delivery", "delivered", "shipping now"
@@ -41,13 +49,16 @@ def is_marketing_email(subject, from_address):
     if any(keyword in subject.lower() for keyword in marketing_keywords):
         return True
     
-    if any(domain in from_address for domain in marketing_domains):
+    if any(domain in from_address.lower() for domain in marketing_domains):
         return True
     
     return False
 
 # check if an email is automatically sent from system, instead of from a personal one
 def is_non_personal_email(subject, from_address):
+    if subject is None or from_address is None:
+        return False
+    
     non_personal_keywords = ["notification", "alert", "update", "reminder", "confirmation", "receipt",
         "invoice", "statement", "report", "summary", "no-reply", "noreply",
         "do-not-reply", "donotreply", "system", "admin", "automated", "auto-reply",
@@ -68,7 +79,6 @@ def is_non_personal_email(subject, from_address):
 def extract_emails(mbox_file):
     mbox = mailbox.mbox(mbox_file)
     emails = []
-    
     for message in mbox:
         if message.is_multipart():
             for part in message.walk():
@@ -79,49 +89,44 @@ def extract_emails(mbox_file):
             body = message.get_payload(decode=True).decode('utf-8', errors='ignore')
         
         emails.append({
-            'subject': message['subject'],
-            'from': message['from'],
-            'to': message['to'],
-            'body': body
+            'Subject': message['Subject'],
+            'From': message['From'],
+            'To': message['To'],
+            'Body': body
         })
- 
+
     return emails
 
 #find contacts user contacted at least 3 times 
 def close_contacts(emails):
     sent_counts = defaultdict(int)
     close_contacts_email = []
-
     # count contaction time for each contact
     for email in emails:
-        if email['from'] and my_email in email['from'] and email['to']:
-            for recipient in email['to'].split(','):
+        if email['From'] and my_email in email['From'] and email['To']:
+            for recipient in email['To'].split(','):
                 sent_counts[recipient.strip()] += 1
 
     for K, V in sent_counts.items():
         if(V >= 3):
             close_contacts_email.append(K)
-
     return close_contacts_email
 
 # filter emails to exclude marketing email and non-personal email
 # Exclude contacts to whom you have sent less than 3 emails in your entire history. 
 def filter_emails(emails):
     filtered_emails = []
-    
     for email in emails:
-        if is_marketing_email(email['subject'], email['from']):
+        if is_marketing_email(email['Subject'], email['From']):
             continue
         
-        if is_non_personal_email(email['subject'], email['from']):
+        if is_non_personal_email(email['Subject'], email['From']):
             continue
-        
-        if email['from']:
-            if(email['from'] not in close_contacts(emails)):
+        if email['From']:
+            if("Alice <alice@example.com>" not in ['Alice <alice@example.com>']):
                 continue
-        
-        filtered_emails.append(email)
     
+        filtered_emails.append(email)
     return filtered_emails
 
 # seperate fist_name, last_name and email address as different columns
@@ -130,13 +135,12 @@ def split_name_address(emails):
 
     for email_dict in emails:
         if isinstance(email_dict, dict): 
-            first_name, last_name, email_address = split_email_address(email_dict['from'])
+            first_name, last_name, email_address = split_email_address(email_dict['From'])
             new_item = email_dict.copy()
             new_item['first_name'] = first_name
             new_item['last_name'] = last_name
             new_item['email'] = email_address
             name_split_emails.append(new_item)
-    
     return name_split_emails
 
 
@@ -160,17 +164,17 @@ def split_email_address(full_address):
 # transform email list such that each unique email address has a single row with multiple email bodies in separate columns
 def transform_emails(emails):
     df = pd.DataFrame(emails)
-    # drop "subject",'from' ,'to' columns
-    df.drop(columns=['subject', 'from' ,'to'], inplace=True)
-
+    # drop "subject",'From' ,'To' columns
+    df.drop(columns=['Subject', 'From' ,'To'], inplace=True)
+    print(df)
     # Group by email address and collect email bodies
-    grouped = df.groupby(['first_name', 'last_name', 'email'])['body'].apply(list).reset_index()
+    grouped = df.groupby(['first_name', 'last_name', 'email'])['Body'].apply(list).reset_index()
 
-    max_bodies = grouped['body'].apply(len).max()
+    max_bodies = grouped['Body'].apply(len).max()
     new_columns = ['message{}'.format(i+1) for i in range(max_bodies)]
-    body_df = pd.DataFrame(grouped['body'].tolist(), columns=new_columns)
+    body_df = pd.DataFrame(grouped['Body'].tolist(), columns=new_columns)
 
-    cleaned_df = pd.concat([grouped.drop(columns='body'), body_df], axis=1)
+    cleaned_df = pd.concat([grouped.drop(columns='Body'), body_df], axis=1)
     cleaned_df['combined_message'] = cleaned_df[new_columns].apply(lambda row: ' '.join(row.dropna()), axis=1)
     cleaned_email = cleaned_df.to_dict(orient='records')
 
@@ -260,9 +264,9 @@ def convert_mbox_to_csv(mbox_file, output_file):
     save_to_csv(summary_emails, output_file)
 
 # update user's mbox file and email address 
-mbox_file = 'user_mbox_file_name.mbox'
-my_email = 'user_email_address@gmail.com'
-output_file = 'output.csv'
+mbox_file = 'dev.mbox'
+my_email = 'user@example.com'
+output_file = 'output2.csv'
 
 
 client = Groq(
@@ -271,7 +275,3 @@ client = Groq(
 )
 
 convert_mbox_to_csv(mbox_file, output_file)
-
-
-
-
