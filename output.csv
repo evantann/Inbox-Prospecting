@@ -1,48 +1,81 @@
-first_name,last_name,email,message1,message2,message3,message4,combined_message,sentiment_analysis,summary_relationship
+First_Name,Last_Name,Email,Body,sentiment_analysis,summary_relationship
 Alice,Wonderland,alice@example.com,"Hi User,
 
 It’s been a while. Let’s catch up soon.
 
 Cheers,
 Alice
-","Hi User,
+ Hi Alice,
 
-Next week works for me. Let’s set a date.
+Looking forward to catching up. How about next week?
 
-Cheers,
-Alice
-","Hi User,
-
-Wednesday at 3 PM works great. See you then!
-
-Cheers,
-Alice
-","Hi User,
-
-Looking forward to our meeting!
-
-Cheers,
-Alice","Hi User,
-
-It’s been a while. Let’s catch up soon.
-
-Cheers,
-Alice
+Best,
+User
  Hi User,
 
 Next week works for me. Let’s set a date.
 
 Cheers,
 Alice
+ Hi Alice,
+
+How about Wednesday at 3 PM?
+
+Best,
+User
  Hi User,
 
 Wednesday at 3 PM works great. See you then!
 
 Cheers,
 Alice
+ Hi Alice,
+
+Just confirming our meeting for Wednesday at 3 PM. Looking forward to it!
+
+Best,
+User
  Hi User,
 
 Looking forward to our meeting!
 
 Cheers,
-Alice",positive,"The tone of the email exchange suggests a friendly and familiar relationship between the user and Alice, with a history of positive interactions and a sense of enthusiasm for their upcoming meeting."
+Alice
+",positive,"The tone of the email exchange between the user and Alice is friendly and enthusiastic, indicating a positive and familiar relationship."
+Emily,White,emily.white@businessmail.com,"Hi User,
+
+Just a reminder about our team meeting tomorrow at 10 AM. Please be prepared to discuss the new project milestones.
+
+Best,
+Emily
+ Hi Emily,
+
+Thanks for the reminder. I’ll make sure to have the milestones ready for discussion.
+
+Best,
+User
+ Hi User,
+
+Great! Also, could you send me a brief summary of your updates before the meeting? It would be very helpful.
+
+Best,
+Emily
+ Hi Emily,
+
+I’ve attached the summary of my updates. Please let me know if you need any additional information before the meeting.
+
+Best,
+User
+ Hi User,
+
+Thanks for the summary. It looks good. See you tomorrow at 10 AM.
+
+Best,
+Emily
+ Hi Emily,
+
+See you soon.
+
+Best,
+User
+",positive,"Your communication with Emily is cordial, professional, and collaborative, characterized by polite exchanges, prompt responses, and a focus on sharing information and preparing for a meeting."
