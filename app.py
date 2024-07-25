@@ -17,8 +17,8 @@ app = Flask(__name__)
 matplotlib.use('Agg')
 
 # Configuration
-UPLOAD_FOLDER = 'uploads/'
-STATIC_FOLDER = 'static/'
+UPLOAD_FOLDER = 'tmp/'
+STATIC_FOLDER = 'tmp/'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['STATIC_FOLDER'] = STATIC_FOLDER
 
