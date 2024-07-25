@@ -21,7 +21,7 @@
                 }
             ],
             "sentiment_analysis": "positive",
-            "summary_relationship": "The tone of this email suggests a transactional and promotional relationship, with the sender attempting to entice the recipient with an exclusive offer, implying a lack of personal connection."
+            "summary_relationship": "The tone is promotional and transactional, indicating a distant, casual relationship with the contact, who is likely a recipient of regular marketing emails."
         },
         {
             "contact": "Alice Wonderland",
@@ -96,7 +96,7 @@
                 }
             ],
             "sentiment_analysis": "positive",
-            "summary_relationship": "The email exchange reveals a polite, friendly, and collaborative tone between the two individuals, indicating a positive and familiar relationship where they are making an effort to reconnect and schedule a meeting."
+            "summary_relationship": "The tone of the email exchange between the user and Alice is friendly and enthusiastic, suggesting a warm and familiar relationship."
         },
         {
             "contact": "John Doe",
@@ -117,7 +117,7 @@
                 }
             ],
             "sentiment_analysis": "neutral",
-            "summary_relationship": "The tone of the email suggests a brief, polite, and professional interaction with John, who appears to be checking in and offering assistance in a somewhat distant or casual acquaintance-like manner."
+            "summary_relationship": "The tone of the email suggests a polite and brief, likely acquaintance-level interaction with John, who appears to be checking in and offering assistance in a friendly but not overly familiar manner."
         },
         {
             "contact": "Annabelle Lee",
@@ -147,7 +147,7 @@
                 }
             ],
             "sentiment_analysis": "positive",
-            "summary_relationship": "The tone of the email exchange suggests a professional and cordial relationship between the two parties, with Annabelle providing regular updates and the user responding with appreciation and an offer of support."
+            "summary_relationship": "The tone of the email exchange suggests a professional and collaborative relationship between the two parties, with the contact being informed and supportive."
         },
         {
             "contact": "Marcus Grant",
@@ -177,7 +177,7 @@
                 }
             ],
             "sentiment_analysis": "neutral",
-            "summary_relationship": "The tone of the email exchange indicates a professional and collaborative relationship between the user and Marcus, with a sense of urgency and mutual respect."
+            "summary_relationship": "The tone of the email exchange suggests a professional and collaborative relationship between the two parties, with a sense of urgency and mutual respect."
         },
         {
             "contact": "Maria Lopez",
@@ -207,7 +207,7 @@
                 }
             ],
             "sentiment_analysis": "positive",
-            "summary_relationship": "The tone of the email exchange is friendly and polite, indicating a professional and positive relationship between the user and Maria."
+            "summary_relationship": "The tone of the email exchange is professional and cordial, with Maria extending an invitation and the user responding positively, indicating a respectful and polite relationship between the two."
         },
         {
             "contact": "Samantha Brown",
@@ -237,7 +237,7 @@
                 }
             ],
             "sentiment_analysis": "positive",
-            "summary_relationship": "The contact has a positive and engaged relationship with Samantha, appreciating the newsletter content and expressing gratitude for the effort."
+            "summary_relationship": "The relationship with this contact is cordial and professional, characterized by a friendly exchange of appreciation and gratitude."
         },
         {
             "contact": "Emily White",
@@ -303,7 +303,7 @@
                 }
             ],
             "sentiment_analysis": "positive",
-            "summary_relationship": "You have a polite and cooperative professional relationship with Emily, exchanging courteous emails to coordinate and prepare for a team meeting."
+            "summary_relationship": "The tone of the email exchange between you and Emily is professional, friendly, and collaborative, indicating a positive and respectful working relationship."
         },
         {
             "contact": "Tim Johnson",
@@ -333,7 +333,7 @@
                 }
             ],
             "sentiment_analysis": "neutral",
-            "summary_relationship": "The tone of the email exchange suggests a professional and courteous relationship between the two parties, with a sense of mutual respect and a focus on resolving the technical issue at hand."
+            "summary_relationship": "The tone of the email exchange suggests a polite, professional, and friendly relationship between the two contacts, with a sense of mutual respect and cooperation."
         }
     ]
 }
