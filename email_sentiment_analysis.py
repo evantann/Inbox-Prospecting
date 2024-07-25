@@ -305,7 +305,6 @@ def save_to_csv(emails, output_file):
 # Main function
 def convert_mbox_to_csv(mbox_file, output_file):
     emails = extract_emails(mbox_file)
-    print(emails)
     user_response_time = response_time(emails)
     unique_contact_interactions_list = unique_contacts(emails)
     filtered_emails = filter_emails(emails)
@@ -320,7 +319,6 @@ def convert_mbox_to_csv(mbox_file, output_file):
 mbox_file = 'dev.mbox'
 my_email = 'user@example.com'
 output_file = 'output.csv'
-
 
 client = Groq(
     api_key = os.getenv("GROQ_API_KEY"),
