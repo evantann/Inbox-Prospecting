@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Analysis</title>
+</head>
+<body>
+    <h1>Welcome to the Email Analysis Tool</h1>
+    <form id="uploadForm" action="/process_emails" method="post" enctype="multipart/form-data">
+        <label for="mbox_file">Upload your .mbox file:</label>
+        <input type="file" id="mbox_file" name="mbox_file" required>
+        <button type="submit">Process Emails</button>
+    </form>
+
+    <div id="plots">
+        <!-- Plot images will be displayed here after processing -->
+        <h2>Generated Plots</h2>
+        <img id="number_of_interactions" src="/static/number_of_interactions.png" alt="Number of Interactions" style="display: none;">
+        <img id="email_rate_distribution" src="/static/email_rate_distribution.png" alt="Email Rate Distribution" style="display: none;">
+        <img id="sentiment_analysis_pie_chart" src="/static/sentiment_analysis_pie_chart.png" alt="Sentiment Analysis Pie Chart" style="display: none;">
+        <img id="number_of_invitations" src="/static/number_of_invitations.png" alt="Number of Invitations" style="display: none;">
+        <img id="email_rate_vs_interactions" src="/static/email_rate_vs_interactions.png" alt="Email Rate vs. Interactions" style="display: none;">
+    </div>
+
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const formData = new FormData(this);
+    
+            fetch('/process_emails', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert('Error processing emails: ' + data.error);
+                } else {
+                    const timestamp = new Date().getTime(); // Unique timestamp
+    
+                    // Update image sources with a unique query parameter
+                    document.getElementById('number_of_interactions').src = `/static/number_of_interactions.png?${timestamp}`;
+                    document.getElementById('email_rate_distribution').src = `/static/email_rate_distribution.png?${timestamp}`;
+                    document.getElementById('sentiment_analysis_pie_chart').src = `/static/sentiment_analysis_pie_chart.png?${timestamp}`;
+                    document.getElementById('number_of_invitations').src = `/static/number_of_invitations.png?${timestamp}`;
+                    document.getElementById('email_rate_vs_interactions').src = `/static/email_rate_vs_interactions.png?${timestamp}`;
+    
+                    // Display the images
+                    document.getElementById('number_of_interactions').style.display = 'block';
+                    document.getElementById('email_rate_distribution').style.display = 'block';
+                    document.getElementById('sentiment_analysis_pie_chart').style.display = 'block';
+                    document.getElementById('number_of_invitations').style.display = 'block';
+                    document.getElementById('email_rate_vs_interactions').style.display = 'block';
+                }
+            })
+            .catch(error => {
+                alert('Error: ' + error.message);
+            });
+        });
+    </script>
+    
+</body>
+</html>
