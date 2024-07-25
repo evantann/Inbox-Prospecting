@@ -1,19 +1,25 @@
-import json
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+import json
 
-# Load data from JSON file
+save_location = './plots/'
+
+# Load the JSON data
 with open('email_data.json', 'r') as file:
     data = json.load(file)
 
-# Convert data to a DataFrame
-df = pd.DataFrame(data['contacts'])
+# Convert JSON data to DataFrame
+contacts = data['contacts']
+df = pd.DataFrame(contacts)
 
-# Setup seaborn style
+# Ensure 'duration_known' is a numeric column
+df['duration_known'] = df['duration_known'].fillna(0).astype(float)
+
+# Set up the seaborn style
 sns.set(style="whitegrid")
 
-# Plot number of interactions per contact
+# Bar Chart of Number of Interactions
 plt.figure(figsize=(12, 6))
 sns.barplot(x='contact', y='number_of_interactions', data=df, palette='viridis')
 plt.xticks(rotation=45, ha='right')
@@ -21,49 +27,45 @@ plt.title('Number of Interactions per Contact')
 plt.xlabel('Contact')
 plt.ylabel('Number of Interactions')
 plt.tight_layout()
-plt.savefig('interactions_per_contact.png')
+plt.savefig(save_location + 'number_of_interactions.png')  # Save the figure
 plt.show()
 
-# Plot number of invitations per contact
+# Histogram of Email Rate
+plt.figure(figsize=(8, 6))
+sns.histplot(df['email_rate'], bins=10, kde=True, color='blue')
+plt.title('Distribution of Email Rate')
+plt.xlabel('Email Rate')
+plt.ylabel('Frequency')
+plt.tight_layout()
+plt.savefig(save_location + 'email_rate_distribution.png')  # Save the figure
+plt.show()
+
+# Pie Chart of Sentiment Analysis
+sentiment_counts = df['sentiment_analysis'].value_counts()
+plt.figure(figsize=(8, 8))
+plt.pie(sentiment_counts, labels=sentiment_counts.index, autopct='%1.1f%%', colors=sns.color_palette('pastel'))
+plt.title('Distribution of Sentiment Analysis')
+plt.savefig(save_location + 'sentiment_analysis_pie_chart.png')  # Save the figure
+plt.show()
+
+# Bar Chart of Number of Invitations
 plt.figure(figsize=(12, 6))
-sns.barplot(x='contact', y='number_of_invitations', data=df, palette='plasma')
+sns.barplot(x='contact', y='number_of_invitations', data=df, palette='coolwarm')
 plt.xticks(rotation=45, ha='right')
 plt.title('Number of Invitations per Contact')
 plt.xlabel('Contact')
 plt.ylabel('Number of Invitations')
 plt.tight_layout()
-plt.savefig('invitations_per_contact.png')
+plt.savefig(save_location + 'number_of_invitations.png')  # Save the figure
 plt.show()
 
-# Plot email rate per contact
-plt.figure(figsize=(12, 6))
-sns.barplot(x='contact', y='email_rate', data=df, palette='cividis')
-plt.xticks(rotation=45, ha='right')
-plt.title('Email Rate per Contact')
-plt.xlabel('Contact')
-plt.ylabel('Email Rate')
+# Scatter Plot of Email Rate vs. Number of Interactions
+plt.figure(figsize=(10, 6))
+sns.scatterplot(x='email_rate', y='number_of_interactions', data=df, hue='sentiment_analysis', palette='deep')
+plt.title('Email Rate vs. Number of Interactions')
+plt.xlabel('Email Rate')
+plt.ylabel('Number of Interactions')
+plt.legend(title='Sentiment Analysis')
 plt.tight_layout()
-plt.savefig('email_rate_per_contact.png')
-plt.show()
-
-# Plot duration known per contact
-plt.figure(figsize=(12, 6))
-sns.barplot(x='contact', y='duration_known', data=df, palette='inferno')
-plt.xticks(rotation=45, ha='right')
-plt.title('Duration Known per Contact')
-plt.xlabel('Contact')
-plt.ylabel('Duration Known (Days)')
-plt.tight_layout()
-plt.savefig('duration_known_per_contact.png')
-plt.show()
-
-# Plot contacts categorized by influencer status
-plt.figure(figsize=(8, 6))
-sns.countplot(x='is_influencer', data=df, palette='magma')
-plt.title('Influencer Status Distribution')
-plt.xlabel('Is Influencer')
-plt.ylabel('Count')
-plt.xticks([0, 1], ['Not Influencer', 'Influencer'])
-plt.tight_layout()
-plt.savefig('influencer_status_distribution.png')
+plt.savefig(save_location + 'email_rate_vs_interactions.png')  # Save the figure
 plt.show()
