@@ -17,8 +17,8 @@ app = Flask(__name__)
 matplotlib.use('Agg')
 
 # Configuration
-UPLOAD_FOLDER = 'tmp/'
-STATIC_FOLDER = 'tmp/'
+UPLOAD_FOLDER = 'uploads/'
+STATIC_FOLDER = 'static/'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['STATIC_FOLDER'] = STATIC_FOLDER
 
@@ -254,6 +254,11 @@ def index():
 
 @app.route('/process_emails', methods=['POST'])
 def process_emails():
+    if not os.path.exists(app.config['UPLOAD_FOLDER']):
+        os.makedirs(app.config['UPLOAD_FOLDER'])
+    if not os.path.exists(app.config['STATIC_FOLDER']):
+        os.makedirs(app.config['STATIC_FOLDER'])
+
     if 'mbox_file' not in request.files:
         return jsonify({'error': 'No file part'}), 400
 
@@ -308,4 +313,4 @@ if __name__ == '__main__':
         os.makedirs(app.config['UPLOAD_FOLDER'])
     if not os.path.exists(app.config['STATIC_FOLDER']):
         os.makedirs(app.config['STATIC_FOLDER'])
-    app.run(debug=True)
+    app.run(debug=True, port=8001)
