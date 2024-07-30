@@ -2,6 +2,7 @@ import os
 import json
 import spacy
 import mailbox
+import numpy as np
 import pandas as pd
 from groq import Groq
 from datetime import datetime
@@ -17,7 +18,7 @@ INVITATION_KEYWORDS = INVITATION_KEYWORDS = {
     'invite', 'invites', 'invited', 'inviting', 'invitation', 'introduce', 'introduction', 'RSVP', 'like to meet', 'attend', 'event', 'participate'
 }
 ACCEPTANCE_KEYWORDS = {
-    'accept', 'confirm', 'will attend', 'agree'
+    'accept', 'will attend'
 }
 STOP_WORDS = {'i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you', 'your', 'yours', 'yourself', 'yourselves',
     'he', 'him', 'his', 'himself', 'she', 'her', 'hers', 'herself', 'it', 'its', 'itself', 'they', 'them', 'their',
@@ -127,34 +128,38 @@ def sentiment_analysis(sentiment_analyses, summary_relationships, contact, email
     summary_relationship = groq_summary_relationship(feed)
     summary_relationships[contact] = summary_relationship
 
-def calculate_response_time(threads, response_times, emails):
-
-    # Group emails into threads based on the subject
+# Group emails into threads based on the subject
+def organize_by_thread(threads, contact, emails):
     for email in emails:
         subject = email['Subject']
         if subject and ('Re:' in subject or 'RE' in subject):
-            threads[subject].append(email)
+            threads[contact][subject].append(email)
 
-    # Calculate response times for each thread
-    for thread_emails in threads.values():
-        # Sort emails by date
-        sorted_emails = sorted(thread_emails, key=lambda x: parse_date(x['Date']) or datetime.min)
-        for i in range(1, len(sorted_emails)):
-            current_email = sorted_emails[i]
-            previous_email = sorted_emails[i - 1]
-            
-            # Check if the current email is from the owner and the previous one is not
-            if OWNER_EMAIL in current_email['From'] and OWNER_EMAIL not in previous_email['From']:
-                response_time = (parse_date(current_email['Date']) - parse_date(previous_email['Date'])).seconds
-                response_time /= 3600
-                response_times.append(response_time)
+def calculate_response_times(threads, response_times_by_contact, response_times, median_response_times):
+    for contact, threads in threads.items():
+        for email in threads.values():
+            for i in range(1, len(email)):
+                current_email = email[i]
+                previous_email = email[i - 1]
+                
+                # Check if the current email is from the owner and the previous one is not
+                if OWNER_EMAIL in current_email['From'] and OWNER_EMAIL not in previous_email['From']:
+                    response_time = (parse_date(current_email['Date']) - parse_date(previous_email['Date'])).seconds
+                    response_time /= 3600
+                    response_times.append(response_time)
+                    response_times_by_contact[contact].append(response_time)
 
+    for contact, times in response_times_by_contact.items():
+        if times:
+            median_response_times[contact] = np.median(times)
+            response_times_by_contact[contact] = sum(times) / len(times)
+        else:
+            response_times_by_contact[contact] = None
+        
     if response_times:
-        average_response_time = sum(response_times) / len(response_times)
-        return average_response_time
-    else:
-        return None
-    
+        response_times = sum(response_times) / len(response_times)
+
+# checks whether every email from the contact is replied to by the user
 def calculate_follow_up_rate(follow_up, contact, emails):
     from_contact_email_count = sum(1 for email in emails if contact in email['From'])
     follow_up_count = 0
@@ -167,8 +172,6 @@ def calculate_follow_up_rate(follow_up, contact, emails):
             follow_up_count += 1
 
     follow_up[contact] = follow_up_count / from_contact_email_count * 100
-
-    return follow_up
     
 # counts the average number of interactions per month for months containing at least one email
 def interaction_frequency(monthly_interactions, email_counts, contact, emails):
@@ -188,8 +191,6 @@ def interaction_frequency(monthly_interactions, email_counts, contact, emails):
                 non_zero_months += 1
         monthly_interactions[contacts] = total_sum / non_zero_months
             
-    return monthly_interactions
-
 def user_initiated(user_initiation, contact, emails):
     if OWNER_EMAIL in emails[0]['From']:
         user_initiation[contact] = True
@@ -213,9 +214,8 @@ def find_keywords(keywords, contact, emails):
     filtered_messages = [word for word in all_messages if word not in STOP_WORDS and contact.split()[0].lower() not in word and OWNER_NAME.lower() not in word]
     word_counts = Counter(filtered_messages)
     most_common_words = word_counts.most_common(5)
-    keywords[contact] = most_common_words
-
-    return keywords
+    top_words = [word for word, count in most_common_words]
+    keywords[contact] = top_words
 
 def process_message(message, email_content, email_addresses, interaction_counts, invitation_counts, acceptance_counts, first_email_dates, last_email_dates):
     from_address = message['From']
@@ -268,23 +268,24 @@ def process_message(message, email_content, email_addresses, interaction_counts,
             if last_email_dates[contact] is None or date > last_email_dates[contact]:
                 last_email_dates[contact] = date
 
-def prepare_output(email_content, email_addresses, interaction_counts, invitation_counts, acceptance_counts, first_email_dates, last_email_dates, sentiment_analyses, summary_relationships, monthly_interactions, user_initiation, personalization_scores, follow_up_rates, keywords):
+def prepare_output(email_content, email_addresses, interaction_counts, invitation_counts, acceptance_counts, first_email_dates, last_email_dates, sentiment_analyses, summary_relationships, monthly_interactions, user_initiation, personalization_scores, follow_up_rates, keywords, response_times_by_contact, median_response_times):
     return [{
                 'contact': contact,
                 'email_address': email_addresses[contact],
-                'number_of_invitations': invitation_counts[contact],
+                'emails_exchanged': interaction_counts[contact],
+                'number_of_invitations_received': invitation_counts[contact],
                 'number_of_accepted_invitations': acceptance_counts[contact],
-                'duration_known': (last_email_dates[contact] - first_email_dates[contact]).days if first_email_dates[contact] and last_email_dates[contact] else None,
-                'number_of_invitations': invitation_counts[contact],
-                'email_rate': (interaction_counts[contact] / ((last_email_dates[contact] - first_email_dates[contact]).days + 1)) if first_email_dates[contact] and last_email_dates[contact] else None,
+                'duration_known (months)': ((last_email_dates[contact] - first_email_dates[contact]).days) / 30 if first_email_dates[contact] and last_email_dates[contact] else None,
                 'emails': email_content[contact],
                 'sentiment_analysis': sentiment_analyses[contact],
                 'summary_relationship': summary_relationships[contact],
-                'monthly_interactions': monthly_interactions[contact],
                 'user_initiated': user_initiation[contact],
-                'personalization_scores': personalization_scores[contact],
+                'interaction_frequency (emails per month)': monthly_interactions[contact],
                 'follow_up_rate': follow_up_rates[contact],
-                'keywords': keywords[contact]
+                'average_response_time (hours)': response_times_by_contact[contact] if response_times_by_contact[contact] else 'Not enough data',
+                'median_response_time (hours)': median_response_times[contact] if median_response_times[contact] else 'Not enough data',
+                'keywords': keywords[contact],
+                'personalization_score': personalization_scores[contact],
             }
             for contact in email_content
             ]
@@ -296,13 +297,14 @@ def main():
     try:
         mbox = mailbox.mbox('dev.mbox')
 
-        threads = defaultdict(list)
         keywords = defaultdict(list)
         email_content = defaultdict(list)
         email_addresses = defaultdict(str)
         sentiment_analyses = defaultdict(str)
         summary_relationships = defaultdict(str)
         personalization_scores = defaultdict(int)
+        response_times_by_contact = defaultdict(list)
+        median_response_times = defaultdict(int)
         monthly_interactions = defaultdict(int)
         interaction_counts = defaultdict(int)
         invitation_counts = defaultdict(int)
@@ -311,6 +313,7 @@ def main():
         user_initiation = defaultdict(bool)
         last_email_dates = defaultdict(lambda: None)
         first_email_dates = defaultdict(lambda: None)
+        threads = defaultdict(lambda: defaultdict(list))
         email_counts = defaultdict(lambda: [0] * 13)
         response_times = []
 
@@ -320,15 +323,17 @@ def main():
         for contact, emails in email_content.items():
             emails = sorted(emails, key=lambda x: parse_date(x['Date']) or datetime.min)
             # sentiment_analysis(sentiment_analyses, summary_relationships, contact, emails)
-            calculate_response_time(threads, response_times, emails)
+            organize_by_thread(threads, contact, emails)
             interaction_frequency(monthly_interactions, email_counts, contact, emails)
             user_initiated(user_initiation, contact, emails)
             calculate_personalization_score(personalization_scores, contact, emails)
             calculate_follow_up_rate(follow_up_rates, contact, emails)
             find_keywords(keywords, contact, emails)
         
+        calculate_response_times(threads, response_times_by_contact, response_times, median_response_times)
+        
         output_data = prepare_output(email_content, email_addresses, interaction_counts, invitation_counts, acceptance_counts, first_email_dates, last_email_dates,
-                                     sentiment_analyses, summary_relationships, monthly_interactions, user_initiation, personalization_scores, follow_up_rates, keywords)
+                                     sentiment_analyses, summary_relationships, monthly_interactions, user_initiation, personalization_scores, follow_up_rates, keywords, response_times_by_contact, median_response_times)
 
         with open('email_data.json', 'w', encoding='utf-8') as json_file:
             json.dump(output_data, json_file, indent=4)

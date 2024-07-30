@@ -2,10 +2,10 @@
     {
         "contact": "Alice Wonderland",
         "email_address": "alice@example.com",
-        "number_of_invitations": 0,
-        "number_of_accepted_invitations": 1,
-        "duration_known": 0,
-        "email_rate": 7.0,
+        "emails_exchanged": 7,
+        "number_of_invitations_received": 0,
+        "number_of_accepted_invitations": 0,
+        "duration_known (months)": 3.066666666666667,
         "emails": [
             {
                 "From": "Alice Wonderland <alice@example.com>",
@@ -49,7 +49,7 @@
                     "User Name <user@example.com>"
                 ],
                 "Subject": "Re: Catching Up",
-                "Date": "Fri, 21 Jul 2023 15:00:00 +0000",
+                "Date": "Fri, 21 Oct 2023 15:00:00 +0000",
                 "Body": "Hi User,\n\nWednesday at 3 PM works great. See you then!\n\nCheers,\nAlice\n"
             },
             {
@@ -58,7 +58,7 @@
                     "Alice Wonderland <alice@example.com>"
                 ],
                 "Subject": "Confirming Our Meeting",
-                "Date": "Fri, 21 Jul 2023 16:00:00 +0000",
+                "Date": "Fri, 21 Oct 2023 16:00:00 +0000",
                 "Body": "Hi Alice,\n\nJust confirming our meeting for Wednesday at 3 PM. Looking forward to it!\n\nBest,\nUser\n"
             },
             {
@@ -73,40 +73,27 @@
         ],
         "sentiment_analysis": "",
         "summary_relationship": "",
-        "monthly_interactions": 7.0,
         "user_initiated": false,
-        "personalization_scores": 14,
+        "interaction_frequency (emails per month)": 3.5,
         "follow_up_rate": 75.0,
+        "average_response_time (hours)": 1.0,
+        "median_response_time (hours)": 1.0,
         "keywords": [
-            [
-                "looking",
-                3
-            ],
-            [
-                "forward",
-                3
-            ],
-            [
-                "let\u2019s",
-                2
-            ],
-            [
-                "works",
-                2
-            ],
-            [
-                "it\u2019s",
-                1
-            ]
-        ]
+            "looking",
+            "forward",
+            "let\u2019s",
+            "works",
+            "it\u2019s"
+        ],
+        "personalization_score": 14
     },
     {
         "contact": "John Doe",
         "email_address": "john.doe@example.com",
-        "number_of_invitations": 0,
+        "emails_exchanged": 1,
+        "number_of_invitations_received": 0,
         "number_of_accepted_invitations": 0,
-        "duration_known": 0,
-        "email_rate": 1.0,
+        "duration_known (months)": 0.0,
         "emails": [
             {
                 "From": "John Doe <john.doe@example.com>",
@@ -120,40 +107,27 @@
         ],
         "sentiment_analysis": "",
         "summary_relationship": "",
-        "monthly_interactions": 1.0,
         "user_initiated": false,
-        "personalization_scores": 2,
+        "interaction_frequency (emails per month)": 1.0,
         "follow_up_rate": 0.0,
+        "average_response_time (hours)": "Not enough data",
+        "median_response_time (hours)": "Not enough data",
         "keywords": [
-            [
-                "one-time",
-                1
-            ],
-            [
-                "message",
-                1
-            ],
-            [
-                "touch",
-                1
-            ],
-            [
-                "base",
-                1
-            ],
-            [
-                "let",
-                1
-            ]
-        ]
+            "one-time",
+            "message",
+            "touch",
+            "base",
+            "let"
+        ],
+        "personalization_score": 2
     },
     {
         "contact": "Annabelle Lee",
         "email_address": "annabelle.lee@workmail.com",
-        "number_of_invitations": 0,
+        "emails_exchanged": 2,
+        "number_of_invitations_received": 0,
         "number_of_accepted_invitations": 0,
-        "duration_known": 0,
-        "email_rate": 2.0,
+        "duration_known (months)": 0.0,
         "emails": [
             {
                 "From": "Annabelle Lee <annabelle.lee@workmail.com>",
@@ -176,40 +150,27 @@
         ],
         "sentiment_analysis": "",
         "summary_relationship": "",
-        "monthly_interactions": 2.0,
         "user_initiated": false,
-        "personalization_scores": 0,
+        "interaction_frequency (emails per month)": 2.0,
         "follow_up_rate": 100.0,
+        "average_response_time (hours)": "Not enough data",
+        "median_response_time (hours)": "Not enough data",
         "keywords": [
-            [
-                "update",
-                2
-            ],
-            [
-                "wanted",
-                1
-            ],
-            [
-                "current",
-                1
-            ],
-            [
-                "status",
-                1
-            ],
-            [
-                "project",
-                1
-            ]
-        ]
+            "update",
+            "wanted",
+            "current",
+            "status",
+            "project"
+        ],
+        "personalization_score": 0
     },
     {
         "contact": "Marcus Grant",
         "email_address": "marcus.grant@businessmail.com",
-        "number_of_invitations": 0,
+        "emails_exchanged": 2,
+        "number_of_invitations_received": 0,
         "number_of_accepted_invitations": 0,
-        "duration_known": 0,
-        "email_rate": 2.0,
+        "duration_known (months)": 0.0,
         "emails": [
             {
                 "From": "Marcus Grant <marcus.grant@businessmail.com>",
@@ -232,40 +193,27 @@
         ],
         "sentiment_analysis": "",
         "summary_relationship": "",
-        "monthly_interactions": 2.0,
         "user_initiated": false,
-        "personalization_scores": 1,
+        "interaction_frequency (emails per month)": 2.0,
         "follow_up_rate": 100.0,
+        "average_response_time (hours)": "Not enough data",
+        "median_response_time (hours)": "Not enough data",
         "keywords": [
-            [
-                "draft",
-                2
-            ],
-            [
-                "immediate",
-                1
-            ],
-            [
-                "feedback",
-                1
-            ],
-            [
-                "latest",
-                1
-            ],
-            [
-                "proposal",
-                1
-            ]
-        ]
+            "draft",
+            "immediate",
+            "feedback",
+            "latest",
+            "proposal"
+        ],
+        "personalization_score": 1
     },
     {
         "contact": "Maria Lopez",
         "email_address": "maria.lopez@mydomain.com",
-        "number_of_invitations": 1,
+        "emails_exchanged": 2,
+        "number_of_invitations_received": 1,
         "number_of_accepted_invitations": 0,
-        "duration_known": 0,
-        "email_rate": 2.0,
+        "duration_known (months)": 0.0,
         "emails": [
             {
                 "From": "Maria Lopez <maria.lopez@mydomain.com>",
@@ -288,40 +236,27 @@
         ],
         "sentiment_analysis": "",
         "summary_relationship": "",
-        "monthly_interactions": 2.0,
         "user_initiated": false,
-        "personalization_scores": 4,
+        "interaction_frequency (emails per month)": 2.0,
         "follow_up_rate": 100.0,
+        "average_response_time (hours)": "Not enough data",
+        "median_response_time (hours)": "Not enough data",
         "keywords": [
-            [
-                "you\u2019re",
-                1
-            ],
-            [
-                "invited",
-                1
-            ],
-            [
-                "upcoming",
-                1
-            ],
-            [
-                "webinar",
-                1
-            ],
-            [
-                "latest",
-                1
-            ]
-        ]
+            "you\u2019re",
+            "invited",
+            "upcoming",
+            "webinar",
+            "latest"
+        ],
+        "personalization_score": 4
     },
     {
         "contact": "Samantha Brown",
         "email_address": "samantha.brown@newsletter.com",
-        "number_of_invitations": 0,
+        "emails_exchanged": 2,
+        "number_of_invitations_received": 0,
         "number_of_accepted_invitations": 0,
-        "duration_known": 0,
-        "email_rate": 2.0,
+        "duration_known (months)": 0.0,
         "emails": [
             {
                 "From": "Samantha Brown <samantha.brown@newsletter.com>",
@@ -344,40 +279,27 @@
         ],
         "sentiment_analysis": "",
         "summary_relationship": "",
-        "monthly_interactions": 2.0,
         "user_initiated": false,
-        "personalization_scores": 2,
+        "interaction_frequency (emails per month)": 2.0,
         "follow_up_rate": 100.0,
+        "average_response_time (hours)": "Not enough data",
+        "median_response_time (hours)": "Not enough data",
         "keywords": [
-            [
-                "newsletter",
-                2
-            ],
-            [
-                "subscriber",
-                1
-            ],
-            [
-                "check",
-                1
-            ],
-            [
-                "month's",
-                1
-            ],
-            [
-                "latest",
-                1
-            ]
-        ]
+            "newsletter",
+            "subscriber",
+            "check",
+            "month's",
+            "latest"
+        ],
+        "personalization_score": 2
     },
     {
         "contact": "Emily White",
         "email_address": "emily.white@businessmail.com",
-        "number_of_invitations": 0,
+        "emails_exchanged": 6,
+        "number_of_invitations_received": 0,
         "number_of_accepted_invitations": 0,
-        "duration_known": 0,
-        "email_rate": 6.0,
+        "duration_known (months)": 0.0,
         "emails": [
             {
                 "From": "Emily White <emily.white@businessmail.com>",
@@ -436,40 +358,27 @@
         ],
         "sentiment_analysis": "",
         "summary_relationship": "",
-        "monthly_interactions": 6.0,
         "user_initiated": false,
-        "personalization_scores": 4,
+        "interaction_frequency (emails per month)": 6.0,
         "follow_up_rate": 100.0,
+        "average_response_time (hours)": 0.5,
+        "median_response_time (hours)": 0.5,
         "keywords": [
-            [
-                "summary",
-                3
-            ],
-            [
-                "reminder",
-                2
-            ],
-            [
-                "meeting",
-                2
-            ],
-            [
-                "10",
-                2
-            ],
-            [
-                "milestones",
-                2
-            ]
-        ]
+            "summary",
+            "reminder",
+            "meeting",
+            "10",
+            "milestones"
+        ],
+        "personalization_score": 4
     },
     {
         "contact": "Tim Johnson",
         "email_address": "tim.johnson@techmail.com",
-        "number_of_invitations": 0,
+        "emails_exchanged": 2,
+        "number_of_invitations_received": 0,
         "number_of_accepted_invitations": 0,
-        "duration_known": 0,
-        "email_rate": 2.0,
+        "duration_known (months)": 0.0,
         "emails": [
             {
                 "From": "Tim Johnson <tim.johnson@techmail.com>",
@@ -492,31 +401,18 @@
         ],
         "sentiment_analysis": "",
         "summary_relationship": "",
-        "monthly_interactions": 2.0,
         "user_initiated": false,
-        "personalization_scores": 2,
+        "interaction_frequency (emails per month)": 2.0,
         "follow_up_rate": 100.0,
+        "average_response_time (hours)": "Not enough data",
+        "median_response_time (hours)": "Not enough data",
         "keywords": [
-            [
-                "issue",
-                2
-            ],
-            [
-                "experiencing",
-                1
-            ],
-            [
-                "tech",
-                1
-            ],
-            [
-                "assistance",
-                1
-            ],
-            [
-                "could",
-                1
-            ]
-        ]
+            "issue",
+            "experiencing",
+            "tech",
+            "assistance",
+            "could"
+        ],
+        "personalization_score": 2
     }
 ]
