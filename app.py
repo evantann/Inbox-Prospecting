@@ -32,8 +32,11 @@ INVITATION_KEYWORDS = ['invite', 'invites', 'invited', 'inviting', 'invitation',
 
 def parse_date(date_str):
     try:
-        return datetime.strptime(date_str, '%a, %d %b %Y %H:%M:%S %z')
-    except ValueError:
+        # Remove any extra text after the timezone offset
+        clean_date_str = date_str.split(' (')[0]
+        return datetime.strptime(clean_date_str, '%a, %d %b %Y %H:%M:%S %z')
+    except ValueError as e:
+        print(f"Error parsing date: {e}")
         return None
 
 def is_invitation(subject, body):
