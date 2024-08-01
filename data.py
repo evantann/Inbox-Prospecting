@@ -268,64 +268,79 @@ import json
 from collections import defaultdict
 from datetime import datetime
 
-def process_message(message, email_content, email_addresses, interaction_counts, invitation_counts, acceptance_counts, first_email_dates, last_email_dates):
+def process_message(message, email_content, contact_names, interaction_counts, invitation_counts, acceptance_counts, first_email_dates, last_email_dates):
     try:
         from_address = message['From']
-        to_addresses = message.get_all('To', [])
+        to_addresses = message['To']
         date_str = message['Date']
         date = parse_date(date_str)
         subject = message['Subject']
-        body = message.get_payload()
+        body = message['Body']
         contacts = []
 
-        if from_address and OWNER_EMAIL not in from_address:
-            contact = from_address.split('<')[0].strip()
-            contacts.append(contact)
-            email = from_address.split('<')[1].replace('>', '').strip()
-            if contact not in email_addresses:
-                email_addresses[contact] = email
-        else:
-            for address in to_addresses:
-                address = address.strip()
-                if OWNER_EMAIL not in address:
-                    contact = address.split('<')[0].strip()
-                    contacts.append(contact)
-                    email = address.split('<')[1].replace('>', '').strip()
-                    if contact not in email_addresses:
-                        email_addresses[contact] = email
+        if OWNER_EMAIL not in from_address: # if the owner is not the sender, add the sender to the contact list
+            split_address = from_address.split('<')
+            if len(split_address) > 1: #  Two name-address formats: First Last <email> OR email
+                name = split_address[0].strip()
+                address = split_address[1].replace('>', '').strip()
+                contacts.append(address)
+                if address not in contact_names:
+                    contact_names[address] = name
+            else:
+                if address not in contact_names or contact_names[address] is None: # email only format; if not none, name is already known
+                    contact_names[address] = None
+        elif OWNER_EMAIL in from_address:
+            split_to_addresses = to_addresses.split(',')
+            if len(split_to_addresses) > 1: # multiple recipients
+                for address in split_to_addresses:
+                    address = address.strip()
+                    contacts.append(address)
+                    if address not in contact_names or contact_names[address] is None: # multiple recipients format does not include names
+                        contact_names[address] = None
+            else:
+                split_address = from_address.split('<')
+                if len(split_address) > 1:
+                    name = split_address[0].strip()
+                    address = split_address[1].replace('>', '').strip()
+                    contacts.append(address)
+                    if address not in contact_names:
+                        contact_names[address] = name
+                else:
+                    if address not in contact_names or contact_names[address] is None: # email only format; if not none, name is already known
+                        contact_names[address] = None
 
-        for contact in contacts:
-            email_content[contact].append({
+        for address in contacts:
+            email_content[address].append({
                 'From': from_address,
                 'To': to_addresses,
                 'Subject': subject,
                 'Date': date_str,
                 'Body': body
             })
-            interaction_counts[contact] += 1
+            interaction_counts[address] += 1
 
             if OWNER_EMAIL not in from_address and is_invitation(subject, body):
-                invitation_counts[contact] += 1
+                invitation_counts[address] += 1
             
             if OWNER_EMAIL in from_address and is_acceptance(subject, body):
-                acceptance_counts[contact] += 1
+                acceptance_counts[address] += 1
 
-            if contact == from_address and is_invitation(subject, body):
-                invitation_counts[contact] += 1
+            if address == from_address and is_invitation(subject, body):
+                invitation_counts[address] += 1
             if date:
-                if first_email_dates[contact] is None or date < first_email_dates[contact]:
-                    first_email_dates[contact] = date
-                if last_email_dates[contact] is None or date > last_email_dates[contact]:
-                    last_email_dates[contact] = date
+                if first_email_dates[address] is None or date < first_email_dates[address]:
+                    first_email_dates[address] = date
+                if last_email_dates[address] is None or date > last_email_dates[address]:
+                    last_email_dates[address] = date
 
     except Exception as e:
         print(f"Error processing message: {e}")
 
-def generate_tabular_data(email_content, email_addresses, interaction_counts, invitation_counts, acceptance_counts, first_email_dates, last_email_dates, sentiment_analyses, summary_relationships, monthly_interactions, user_initiation, personalization_scores, follow_up_rates, keywords, response_times_by_contact, median_response_times):
+def generate_tabular_data(email_content, contact_names, interaction_counts, invitation_counts, acceptance_counts, first_email_dates, last_email_dates, sentiment_analyses, summary_relationships, monthly_interactions, user_initiation, personalization_scores, follow_up_rates, keywords, response_times_by_contact, median_response_times):
     try:
         data = [{
             'contact': contact,
-            'email_address': email_addresses.get(contact, 'N/A'),
+            'email_address': contact_names.get(contact, 'N/A'),
             'emails_exchanged': interaction_counts.get(contact, 0),
             'number_of_invitations_received': invitation_counts.get(contact, 0),
             'number_of_accepted_invitations': acceptance_counts.get(contact, 0),
@@ -352,7 +367,7 @@ def main():
 
         keywords = defaultdict(list)
         email_content = defaultdict(list)
-        email_addresses = defaultdict(str)
+        contact_names = defaultdict(str)
         sentiment_analyses = defaultdict(str)   
         summary_relationships = defaultdict(str)
         personalization_scores = defaultdict(int)
@@ -371,48 +386,26 @@ def main():
         response_times = []
         count = 0
 
-        with open('part.txt', 'w') as file:
-            pass
-
-        for message in mbox:
-
-            if message.is_multipart():
-                while count < 25:
-                    count += 1
-                    for part in message.iter_parts():
-                        with open('part.txt', 'a') as f:
-                            f.write(str(part))
-                            f.write('+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
-                        if part.get_content_type() == 'text/plain':
-                            process_message(part, email_content, email_addresses, interaction_counts, invitation_counts, acceptance_counts, first_email_dates, last_email_dates)
-
-            if message.get_content_type() != 'text/plain':
-                continue
+        with open('output.json', 'r') as file:
+            data = json.load(file)
         
-            if not all([
-                message.get('From'),
-                message.get('To'),
-                message.get('Subject'),
-                message.get('Date'),
-                message.get('Body')
-            ]): continue
+        for entry in data:
+            process_message(entry, email_content, contact_names, interaction_counts, invitation_counts, acceptance_counts, first_email_dates, last_email_dates)
 
-            process_message(message, email_content, email_addresses, interaction_counts, invitation_counts, acceptance_counts, first_email_dates, last_email_dates)
-
-        for contact, emails in email_content.items():
+        for address, emails in email_content.items():
             emails = sorted(emails, key=lambda x: parse_date(x['Date']) or datetime.min)
             # sentiment_analysis(sentiment_analyses, summary_relationships, contact, emails)
-            organize_by_thread(threads, contact, emails)
-            interaction_frequency(monthly_interactions, email_counts, contact, emails)
-            user_initiated(user_initiation, contact, emails)
-            calculate_personalization_score(personalization_scores, contact, emails)
-            calculate_follow_up_rate(follow_up_rates, contact, emails)
-            find_keywords(keywords, contact, emails)
+            organize_by_thread(threads, address, emails)
+            interaction_frequency(monthly_interactions, email_counts, address, emails)
+            user_initiated(user_initiation, address, emails)
+            calculate_personalization_score(personalization_scores, address, emails)
+            calculate_follow_up_rate(follow_up_rates, address, emails)
+            find_keywords(keywords, address, emails)
         
         calculate_response_times(threads, response_times_by_contact, response_times, median_response_times)
         
         output_data = generate_tabular_data(
-            email_content, email_addresses, interaction_counts, invitation_counts, acceptance_counts,
+            email_content, contact_names, interaction_counts, invitation_counts, acceptance_counts,
             first_email_dates, last_email_dates, sentiment_analyses, summary_relationships, monthly_interactions,
             user_initiation, personalization_scores, follow_up_rates, keywords, response_times_by_contact, median_response_times
         )

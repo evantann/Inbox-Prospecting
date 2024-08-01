@@ -60,5 +60,5 @@ def process_mbox(input_mbox, output_file):
 
 if __name__ == "__main__":
     input_mbox = 'my.mbox'  # Replace with your input mbox file name
-    output_file = 'output.json'  # Replace with your output JSON file name
+    output_file = 'cleaned_mbox.json'  # Replace with your output JSON file name
     process_mbox(input_mbox, output_file)
