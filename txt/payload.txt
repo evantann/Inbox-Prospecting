@@ -1,0 +1,960 @@
+[<email.message.Message object at 0x7fd3e219eec0>, <email.message.Message object at 0x7fd3e219ee30>]
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+[<email.message.Message object at 0x7fd3e219efe0>, <email.message.Message object at 0x7fd3e219edd0>]
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+[<email.message.Message object at 0x7fd3e219ed70>, <email.message.Message object at 0x7fd3e219ece0>]
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+[<email.message.Message object at 0x7fd3e219e5c0>, <email.message.Message object at 0x7fd3e219f1c0>]
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+[<email.message.Message object at 0x7fd3e219eb90>, <email.message.Message object at 0x7fd3e219ebf0>]
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+<p>Hello <span>Evan</span>&nbsp;&nbsp;,<br />
+<br />
+Just a quick note. We attempted to contact you a few times for our&nbsp;<span>Jr. IT Liaison/Accountant Intern</span>&nbsp;opening but unfortunately did not hear back from you. At this point we&#39;ll consider you not interested in the position and we&#39;ll stop attempting to reach you.<br />
+<br />
+However, we would like to say that our door is open, and if you want to engage with us, please feel free to get in touch.<br />
+<br />
+Best of luck in your future endeavors.</p>
+
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+[<email.message.Message object at 0x7fd3e219edd0>, <email.message.Message object at 0x7fd3e219eda0>]
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+[<email.message.Message object at 0x7fd3e219e620>, <email.message.Message object at 0x7fd3e219ee30>]
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+[<email.message.Message object at 0x7fd3e219f220>, <email.message.Message object at 0x7fd3e219f100>]
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Hello,
+
+Some users of this account have not used AWS CloudShell for over 110 days i=
+n the ap-northeast-1 Region. On July 31, 2024 we are scheduled to delete th=
+e CloudShell home directory and data of inactive users in the ap-northeast-=
+1 Region.
+
+Important: You can see the list of affected users under the Affected Resour=
+ces tab in your AWS Health Dashboard [1]. To stop this deletion, users that=
+ are listed in the Affected Resources tab need to launch CloudShell [2] in =
+the ap-northeast-1 Region.
+
+AWS CloudShell offers a separate home directory per AWS Region, so the dele=
+tion of the home directory will occur only in the AWS Region that hasn=E2=
+=80=99t been used for your CloudShell sessions in over 120 days. If you reg=
+ularly use CloudShell in other AWS Regions, those separate home directories=
+ will not be affected.
+
+Please note that this notification will persist until July 31, 2024, even i=
+f the aforementioned steps are completed.
+
+For more information on persistent storage in AWS CloudShell, see Persisten=
+t Storage [3]. If you have any questions or concerns, please contact AWS Pr=
+emium Support [4].
+
+References:
+[1] https://phd.aws.amazon.com/phd/home?region=3Dap-northeast-1#/account/da=
+shboard/scheduled-changes
+[2] https://ap-northeast-1.console.aws.amazon.com/cloudshell/home?region=3D=
+ap-northeast-1#
+[3] https://docs.aws.amazon.com/cloudshell/latest/userguide/limits.html#per=
+sistent-storage-limitations
+[4] https://aws.amazon.com/support
+
+Sincerely,
+Amazon Web Services
+Amazon Web Services, Inc. is a subsidiary of Amazon.com, Inc. Amazon.com is=
+ a registered trademark of Amazon.com, Inc. This message was produced and d=
+istributed by Amazon Web Services Inc., 410 Terry Ave. North, Seattle, WA 9=
+8109-5210.
+
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Hello,
+
+Some users of this account have not used AWS CloudShell for over 110 days i=
+n the ap-south-1 Region. On July 31, 2024 we are scheduled to delete the Cl=
+oudShell home directory and data of inactive users in the ap-south-1 Region=
+.
+
+Important: You can see the list of affected users under the Affected Resour=
+ces tab in your AWS Health Dashboard [1]. To stop this deletion, users that=
+ are listed in the Affected Resources tab need to launch CloudShell [2] in =
+the ap-south-1 Region.
+
+AWS CloudShell offers a separate home directory per AWS Region, so the dele=
+tion of the home directory will occur only in the AWS Region that hasn=E2=
+=80=99t been used for your CloudShell sessions in over 120 days. If you reg=
+ularly use CloudShell in other AWS Regions, those separate home directories=
+ will not be affected.
+
+Please note that this notification will persist until July 31, 2024, even i=
+f the aforementioned steps are completed.
+
+For more information on persistent storage in AWS CloudShell, see Persisten=
+t Storage [3]. If you have any questions or concerns, please contact AWS Pr=
+emium Support [4].
+
+References:
+[1] https://phd.aws.amazon.com/phd/home?region=3Dap-south-1#/account/dashbo=
+ard/scheduled-changes
+[2] https://ap-south-1.console.aws.amazon.com/cloudshell/home?region=3Dap-s=
+outh-1#
+[3] https://docs.aws.amazon.com/cloudshell/latest/userguide/limits.html#per=
+sistent-storage-limitations
+[4] https://aws.amazon.com/support
+
+Sincerely,
+Amazon Web Services
+Amazon Web Services, Inc. is a subsidiary of Amazon.com, Inc. Amazon.com is=
+ a registered trademark of Amazon.com, Inc. This message was produced and d=
+istributed by Amazon Web Services Inc., 410 Terry Ave. North, Seattle, WA 9=
+8109-5210.
+
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Hello,
+
+Some users of this account have not used AWS CloudShell for over 110 days i=
+n the ap-southeast-2 Region. On July 31, 2024 we are scheduled to delete th=
+e CloudShell home directory and data of inactive users in the ap-southeast-=
+2 Region.
+
+Important: You can see the list of affected users under the Affected Resour=
+ces tab in your AWS Health Dashboard [1]. To stop this deletion, users that=
+ are listed in the Affected Resources tab need to launch CloudShell [2] in =
+the ap-southeast-2 Region.
+
+AWS CloudShell offers a separate home directory per AWS Region, so the dele=
+tion of the home directory will occur only in the AWS Region that hasn=E2=
+=80=99t been used for your CloudShell sessions in over 120 days. If you reg=
+ularly use CloudShell in other AWS Regions, those separate home directories=
+ will not be affected.
+
+Please note that this notification will persist until July 31, 2024, even i=
+f the aforementioned steps are completed.
+
+For more information on persistent storage in AWS CloudShell, see Persisten=
+t Storage [3]. If you have any questions or concerns, please contact AWS Pr=
+emium Support [4].
+
+References:
+[1] https://phd.aws.amazon.com/phd/home?region=3Dap-southeast-2#/account/da=
+shboard/scheduled-changes
+[2] https://ap-southeast-2.console.aws.amazon.com/cloudshell/home?region=3D=
+ap-southeast-2#
+[3] https://docs.aws.amazon.com/cloudshell/latest/userguide/limits.html#per=
+sistent-storage-limitations
+[4] https://aws.amazon.com/support
+
+Sincerely,
+Amazon Web Services
+Amazon Web Services, Inc. is a subsidiary of Amazon.com, Inc. Amazon.com is=
+ a registered trademark of Amazon.com, Inc. This message was produced and d=
+istributed by Amazon Web Services Inc., 410 Terry Ave. North, Seattle, WA 9=
+8109-5210.
+
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Hello,
+
+Some users of this account have not used AWS CloudShell for over 110 days i=
+n the us-east-2 Region. On July 31, 2024 we are scheduled to delete the Clo=
+udShell home directory and data of inactive users in the us-east-2 Region.
+
+Important: You can see the list of affected users under the Affected Resour=
+ces tab in your AWS Health Dashboard [1]. To stop this deletion, users that=
+ are listed in the Affected Resources tab need to launch CloudShell [2] in =
+the us-east-2 Region.
+
+AWS CloudShell offers a separate home directory per AWS Region, so the dele=
+tion of the home directory will occur only in the AWS Region that hasn=E2=
+=80=99t been used for your CloudShell sessions in over 120 days. If you reg=
+ularly use CloudShell in other AWS Regions, those separate home directories=
+ will not be affected.
+
+Please note that this notification will persist until July 31, 2024, even i=
+f the aforementioned steps are completed.
+
+For more information on persistent storage in AWS CloudShell, see Persisten=
+t Storage [3]. If you have any questions or concerns, please contact AWS Pr=
+emium Support [4].
+
+References:
+[1] https://phd.aws.amazon.com/phd/home?region=3Dus-east-2#/account/dashboa=
+rd/scheduled-changes
+[2] https://us-east-2.console.aws.amazon.com/cloudshell/home?region=3Dus-ea=
+st-2#
+[3] https://docs.aws.amazon.com/cloudshell/latest/userguide/limits.html#per=
+sistent-storage-limitations
+[4] https://aws.amazon.com/support
+
+Sincerely,
+Amazon Web Services
+Amazon Web Services, Inc. is a subsidiary of Amazon.com, Inc. Amazon.com is=
+ a registered trademark of Amazon.com, Inc. This message was produced and d=
+istributed by Amazon Web Services Inc., 410 Terry Ave. North, Seattle, WA 9=
+8109-5210.
+
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Hello,
+
+Some users of this account have not used AWS CloudShell for over 110 days i=
+n the ca-central-1 Region. On July 31, 2024 we are scheduled to delete the =
+CloudShell home directory and data of inactive users in the ca-central-1 Re=
+gion.
+
+Important: You can see the list of affected users under the Affected Resour=
+ces tab in your AWS Health Dashboard [1]. To stop this deletion, users that=
+ are listed in the Affected Resources tab need to launch CloudShell [2] in =
+the ca-central-1 Region.
+
+AWS CloudShell offers a separate home directory per AWS Region, so the dele=
+tion of the home directory will occur only in the AWS Region that hasn=E2=
+=80=99t been used for your CloudShell sessions in over 120 days. If you reg=
+ularly use CloudShell in other AWS Regions, those separate home directories=
+ will not be affected.
+
+Please note that this notification will persist until July 31, 2024, even i=
+f the aforementioned steps are completed.
+
+For more information on persistent storage in AWS CloudShell, see Persisten=
+t Storage [3]. If you have any questions or concerns, please contact AWS Pr=
+emium Support [4].
+
+References:
+[1] https://phd.aws.amazon.com/phd/home?region=3Dca-central-1#/account/dash=
+board/scheduled-changes
+[2] https://ca-central-1.console.aws.amazon.com/cloudshell/home?region=3Dca=
+-central-1#
+[3] https://docs.aws.amazon.com/cloudshell/latest/userguide/limits.html#per=
+sistent-storage-limitations
+[4] https://aws.amazon.com/support
+
+Sincerely,
+Amazon Web Services
+Amazon Web Services, Inc. is a subsidiary of Amazon.com, Inc. Amazon.com is=
+ a registered trademark of Amazon.com, Inc. This message was produced and d=
+istributed by Amazon Web Services Inc., 410 Terry Ave. North, Seattle, WA 9=
+8109-5210.
+
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+[<email.message.Message object at 0x7fd3e219eec0>, <email.message.Message object at 0x7fd3e219ee00>]
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+[<email.message.Message object at 0x7fd3e219f160>, <email.message.Message object at 0x7fd3e219ed70>]
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+[<email.message.Message object at 0x7fd3e219ebf0>, <email.message.Message object at 0x7fd3e219f070>]
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+[<email.message.Message object at 0x7fd3e219e620>, <email.message.Message object at 0x7fd3e219ef80>]
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+<html xmlns=3D"http://www.w3.org/1999/xhtml" lang=3D"en"><head>
+    <meta http-equiv=3D"content-type" content=3D"text/html; charset=3DUTF-8=
+">
+<link rel=3D"stylesheet" href=3D"/etc.clientlibs/foundation/clientlibs/main=
+.min.css" type=3D"text/css">
+<script src=3D"/etc.clientlibs/clientlibs/granite/jquery.min.js"></script>
+<script src=3D"/etc.clientlibs/clientlibs/granite/utils.min.js"></script>
+<script src=3D"/etc.clientlibs/clientlibs/granite/jquery/granite.min.js"></=
+script>
+<script src=3D"/etc.clientlibs/foundation/clientlibs/jquery.min.js"></scrip=
+t>
+<script src=3D"/etc.clientlibs/foundation/clientlibs/shared.min.js"></scrip=
+t>
+<script src=3D"/etc.clientlibs/foundation/clientlibs/main.min.js"></script>
+<link rel=3D"stylesheet" href=3D"/apps/marcom-foundation/clientlibs/bootstr=
+ap/3.3.2.min.css" type=3D"text/css">
+<script src=3D"/apps/marcom-foundation/clientlibs/bootstrap/3.3.2.min.js"><=
+/script>
+<link rel=3D"stylesheet" href=3D"/apps/site-services/clientlibs-touch-ui/ac=
+tion-bar.min.css" type=3D"text/css">
+<link rel=3D"stylesheet" href=3D"/apps/marcom-foundation/clientlibs-touch/a=
+ction-bar.min.css" type=3D"text/css">
+<script src=3D"/etc/clientlibs/fd/af/guideTouchAuthoringEditLayer/javascrip=
+t/afAssetLibrary.min.js"></script>
+<script src=3D"/etc/clientlibs/fd/af/guideTouchAuthoringEditLayer/javascrip=
+t/adAssetLibrary.min.js"></script>
+<script src=3D"/apps/site-services/clientlibs-touch-ui/action-bar.min.js"><=
+/script>
+<script src=3D"/apps/marcom-foundation/clientlibs-touch/action-bar.min.js">=
+</script>
+    <title>Payment scheduled</title>
+</head>
+    <body class=3D"xf-web-container" style=3D"padding: 0px;margin: 0px; bac=
+kground-color:#d7dbe0; margin-top: 10px;"><div>
+    <meta http-equiv=3D"Content-Type" content=3D"text/html; charset=3DUTF-8=
+">
+    <meta name=3D"viewport" content=3D"width=3Ddevice-width, initial-scale=
+=3D1.0">
+    <title></title>
+    <style type=3D"text/css">
+        * {
+            line-height: normal !important;
+        }
+
+        strong {
+            font-weight: bold !important;
+        }
+
+        em {
+            font-style: italic !important;
+        }
+
+        body {
+            background-color: #d7dbe0 !important;
+            -webkit-text-size-adjust: none !important;
+        }
+
+        .ExternalClass * {
+            line-height: 112%
+        }
+
+        .ExternalClass p, .ExternalClass span, .ExternalClass font, .Extern=
+alClass td {
+            line-height: 112%
+        }
+
+        td {
+            -webkit-text-size-adjust: none;
+        }
+
+        a[href^=3Dtel] {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .applelinksgray2 a {
+            color: #414042 !important;
+            text-decoration: none;
+        }
+
+        .applelinksgray a {
+            color: #717171 !important;
+            text-decoration: none;
+        }
+
+        .applelinksblack a {
+            color: #000001 !important;
+            text-decoration: none;
+        }
+
+        .applelinkswhite a {
+            color: #FFFFFE !important;
+            text-decoration: none;
+        }
+
+        .wordBreak {
+            overflow-wrap: break-word;
+            word-wrap: break-word;
+            word-break: break-all;
+            word-break: break-word;
+        }
+
+        h1 {
+            font-size: 30px !important;
+            font-family: Arial, Helvetica, sans-serif !important;
+            font-weight: bold !important;
+        }
+
+        h2 {
+            font-size: 24px !important;
+            font-family: Arial, Helvetica, sans-serif !important;
+            font-weight: bold !important;
+        }
+
+        h3 {
+            font-size: 18px !important;
+            font-family: Arial, Helvetica, sans-serif !important;
+            font-weight: bold !important;
+        }
+
+        @media screen and (max-width: 800px) {
+            .fullWidth {
+                width: 100% !important;
+                min-width: 100% !important;
+                margin-left: auto !important;
+                margin-right: auto !important;
+                padding: 0px !important;
+                text-align: center !important;
+            }
+
+            .hero {
+                width: 100% !important;
+                height: auto !important;
+            }
+
+            .moPad {
+                padding-right: 20px !important;
+                padding-left: 20px !important;
+            }
+
+            .zeroPad {
+                padding-right: 0px !important;
+                padding-left: 0px !important;
+            }
+
+            .font14 {
+                font-size: 14px !important;
+            }
+
+            .font24 {
+                font-size: 24px !important;
+            }
+        }
+
+        @media print and (max-width: 800px) {
+            .fullWidth {
+                width: 100% !important;
+                min-width: 100% !important;
+                margin-left: auto !important;
+                margin-right: auto !important;
+                padding: 0px !important;
+                text-align: center !important;
+            }
+
+            .hero {
+                width: 100% !important;
+                height: auto !important;
+            }
+
+            .moPad {
+                padding-right: 20px !important;
+                padding-left: 20px !important;
+            }
+
+            .zeroPad {
+                padding-right: 0px !important;
+                padding-left: 0px !important;
+            }
+
+            .font14 {
+                font-size: 14px !important;
+            }
+
+            .font24 {
+                font-size: 24px !important;
+            }
+        }
+
+        .anchor-text-color a {
+            color: #0060F0;
+        }
+    </style>
+    <br><br>
+    <table>
+        <tbody><tr>
+
+        </tr>
+    </tbody></table>
+    <table>
+        <tbody><tr>
+            <td align=3D"left" style=3D"vertical-align:top;">
+                 <br>
+            </td>
+        </tr>
+    </tbody></table>
+    <table role=3D"presentation" align=3D"center" width=3D"100%" border=3D"=
+0" cellspacing=3D"0" cellpadding=3D"0" style=3D"min-width:800px; background=
+-color:#d7dbe0;" class=3D"fullWidth">
+        <tbody><tr>
+            <td align=3D"center" style=3D"vertical-align:top; padding:0px 0=
+px 20px 0px; min-width:800px; background-color:#d7dbe0;" class=3D"fullWidth=
+">
+                <table role=3D"presentation" align=3D"center" width=3D"800"=
+ cellpadding=3D"0" cellspacing=3D"0" border=3D"0" class=3D"fullWidth" style=
+=3D"background-color:#FFFFFF;">
+                    <!-- Start of Content -->
+                    <tbody><tr>
+                        <td align=3D"left" style=3D"vertical-align:top; bac=
+kground-color: #ffffff;">
+                            <table role=3D"presentation" width=3D"100%" cel=
+lpadding=3D"0" cellspacing=3D"0" border=3D"0">
+
+                                <!-- Start All Content in Blue Background S=
+ection -->
+
+                                <tbody><tr>
+                                    <td align=3D"center" style=3D"vertical-=
+align:top; padding: 23px 0px 0px;background-color: #005EB8;">
+                                        <table role=3D"presentation" cellpa=
+dding=3D"0" cellspacing=3D"0" border=3D"0">
+                                            <tbody><tr>
+                                                <td align=3D"right" style=
+=3D"vertical-align:bottom; padding:0px 0px; width:12px;"><img src=3D"https:=
+//www.chase.com/content/dam/email/images/blue-left.jpg" width=3D"12" height=
+=3D"226" border=3D"0" style=3D"display:block;" alt=3D""></td>
+                                                <td align=3D"center" style=
+=3D"vertical-align:top; padding: 0px 0px 0px;width:616px; background-color:=
+ #FFFFFF;">
+                                                    <table role=3D"presenta=
+tion" width=3D"100%" cellpadding=3D"0" cellspacing=3D"0" border=3D"0">
+                                                        <tbody><tr>
+                                                            <td align=3D"le=
+ft" style=3D"vertical-align:top; padding: 0px 0px; background-color: #fffff=
+f;">
+                                                                <table role=
+=3D"presentation" width=3D"100%" cellpadding=3D"0" cellspacing=3D"0" border=
+=3D"0">
+                                                                    <!-- St=
+art Preheader Text -->
+
+                                                                    <!-- En=
+d Preheader Text -->
+                                                                    <!-- St=
+art Chase Logo -->
+                                                                    <tbody>=
+<tr>
+                                                                        <td=
+ align=3D"left" style=3D"vertical-align:top; padding: 0px 0px;">
+                                                                           =
+ <table role=3D"presentation" width=3D"100%" cellpadding=3D"0" cellspacing=
+=3D"0" border=3D"0">
+                                                                           =
+     <tbody><tr>
+                                                                           =
+         <td align=3D"left" style=3D"vertical-align:bottom;width:144px;">
+                                                                           =
+             <img src=3D"https://www.chase.com/content/dam/email/images/cha=
+se-logo-h-rgb.jpg" width=3D"144" height=3D"76" border=3D"0" style=3D"displa=
+y:block;">
+                                                                           =
+         </td>
+
+                                                                           =
+     </tr>
+                                                                           =
+ </tbody></table>
+                                                                        </t=
+d>
+                                                                    </tr>
+                                                                    <!-- En=
+d Chase Logo -->
+
+                                                                    <!-- Ca=
+tegory pill background color to change based on creative. Use following hex=
+ codes for relevant color: Gray =3D background-color: #D7DBE0; color: #4140=
+42; | Green =3D background-color: #c1e77b; color: #414042; | Yellow =3D bac=
+kground-color: #ffb81; color: #414042; | Red =3D background-color: #B80009;=
+ color: #FFFFFF; -->
+
+                                                                    <tr>
+                                                                        <td=
+ align=3D"left" style=3D"vertical-align:top; padding: 20px 28px 0px;" class=
+=3D"moPad">
+                                                                           =
+ <table role=3D"presentation" align=3D"left" cellpadding=3D"0" cellspacing=
+=3D"0" border=3D"0">
+                                                                           =
+     <tbody><tr>
+                                                                           =
+         <td align=3D"left" style=3D"vertical-align:top;">
+                                                                           =
+             <table role=3D"presentation" width=3D"100%" cellpadding=3D"0" =
+cellspacing=3D"0" border=3D"0">
+                                                                           =
+                 <tbody><tr>
+                                                                           =
+                     <td align=3D"left" style=3D"vertical-align:top; paddin=
+g:5px 10px; font-family:Arial, Helvetica, sans-serif; font-size:12px; font-=
+weight:bold; color:#000000; background-color:#00B633; border-radius:20px; -=
+moz-border-radius: 20px; -webkit-border-radius:20px; white-space: nowrap;" =
+class=3D"font14">
+                                                                           =
+                         <b>Payment scheduled</b><br>
+
+                                                                           =
+                     </td>
+                                                                           =
+                 </tr>
+                                                                           =
+             </tbody></table>
+                                                                           =
+         </td>
+                                                                           =
+     </tr>
+                                                                           =
+ </tbody></table>
+                                                                        </t=
+d>
+                                                                    </tr>
+                                                                    <!-- En=
+d category pill -->
+                                                                    <!-- St=
+art Headline -->
+                                                                    <tr>
+                                                                        <td=
+ align=3D"left" style=3D"vertical-align:top; background-color: #ffffff;">
+                                                                           =
+ <table role=3D"presentation" width=3D"100%" cellpadding=3D"0" cellspacing=
+=3D"0" border=3D"0">
+                                                                           =
+     <tbody><tr>
+                                                                           =
+         <td align=3D"left" style=3D"vertical-align:top; padding: 20px 30px=
+ 28px;" class=3D"moPad">
+                                                                           =
+             <table role=3D"presentation" width=3D"100%" cellpadding=3D"0" =
+cellspacing=3D"0" border=3D"0">
+                                                                           =
+                 <tbody><tr>
+                                                                           =
+                     <td align=3D"left" style=3D"vertical-align:top;">
+                                                                           =
+                         <table role=3D"presentation" align=3D"left" cellpa=
+dding=3D"0" cellspacing=3D"0" border=3D"0" class=3D"fullWidth">
+                                                                           =
+                             <tbody><tr>
+                                                                           =
+                                 <td align=3D"left" style=3D"vertical-align=
+:top; padding: 0px 20px 10px 0px; width: 75px;">
+                                                                           =
+                                     <img src=3Dhttps://static.chasecdn.com=
+/content/services/rendition/image.small.png/unified-assets/digital-cards/ch=
+ase-freedom/freedom-unlimited/41473217017.png width=3D"75" height=3D"auto" =
+alt=3D"Chase credit card" border=3D"0" style=3D"display:block;">
+                                                                           =
+                                 </td>
+                                                                           =
+                             </tr>
+                                                                           =
+                         </tbody></table>
+
+                                                                           =
+                         <!--[if mso]></td>
+                                                                           =
+                     <td><![endif]-->
+
+                                                                           =
+                         <table role=3D"presentation" width=3D"460" align=
+=3D"left" cellpadding=3D"0" cellspacing=3D"0" border=3D"0" class=3D"fullWid=
+th">
+                                                                           =
+                             <tbody><tr>
+                                                                           =
+                                 <td align=3D"left" style=3D"vertical-align=
+:top;">
+                                                                           =
+                                     <table role=3D"presentation" align=3D"=
+left" cellpadding=3D"0" cellspacing=3D"0" border=3D"0" style=3D"vertical-al=
+ign:top;">
+                                                                           =
+                                         <tbody><tr>
+                                                                           =
+                                             <td align=3D"left" style=3D"ve=
+rtical-align:top; padding:0px 0px 0px 0px;" class=3D"zeroPad">
+                                                                           =
+                                                 <h1 style=3D"color:#414042=
+; margin: 0px 0px 0px;">
+                                                                           =
+                                                     Thank you for scheduli=
+ng your credit card payment<br>
+</h1>
+                                                                           =
+                                             </td>
+                                                                           =
+                                         </tr>
+                                                                           =
+                                     </tbody></table>
+                                                                           =
+                                 </td>
+                                                                           =
+                             </tr>
+                                                                           =
+                         </tbody></table>
+                                                                           =
+                     </td>
+                                                                           =
+                 </tr>
+                                                                           =
+             </tbody></table>
+                                                                           =
+         </td>
+                                                                           =
+     </tr>
+                                                                           =
+ </tbody></table>
+                                                                        </t=
+d>
+                                                                    </tr>
+                                                                    <!-- En=
+d Headline -->
+                                                                    <!-- St=
+art Card / Headline -->
+
+                                                                    <!-- En=
+d Card / Headline -->
+                                                                </tbody></t=
+able>
+                                                            </td>
+                                                        </tr>
+                                                    </tbody></table>
+                                                </td>
+                                                <td align=3D"left" style=3D=
+"vertical-align:bottom; padding:0px 0px;width:12px; "><img src=3D"https://w=
+ww.chase.com/content/dam/email/images/blue-right.jpg" width=3D"12" height=
+=3D"226" border=3D"0" style=3D"display:block;" alt=3D""></td>
+                                            </tr>
+                                        </tbody></table>
+                                    </td>
+                                </tr>
+                                <!-- End All Content in Blue Background Sec=
+tion -->
+                                <tr>
+                                    <td align=3D"center" style=3D"vertical-=
+align:top; padding: 0px 0px 0px; background-color: #FFFFFF;">
+                                        <table role=3D"presentation" cellpa=
+dding=3D"0" cellspacing=3D"0" border=3D"0">
+                                            <tbody><tr>
+                                                <td align=3D"right" style=
+=3D"vertical-align:top; padding:0px 0px; width:12px;"><img src=3D"https://w=
+ww.chase.com/content/dam/email/images/white-left.jpg" width=3D"12" height=
+=3D"77" border=3D"0" style=3D"display:block;" alt=3D""></td>
+                                                <td align=3D"center" style=
+=3D"vertical-align:top; padding: 0px 0px 0px;width:616px;">
+                                                    <table role=3D"presenta=
+tion" width=3D"100%" cellpadding=3D"0" cellspacing=3D"0" border=3D"0">
+
+                                                        <!-- Start Body Cop=
+y 1 -->
+                                                        <tbody><tr>
+                                                            <td align=3D"le=
+ft" style=3D"vertical-align:top; padding:0px 30px 30px 30px; font-family:Ar=
+ial, Helvetica, sans-serif; font-size:16px; color:#414042;" class=3D"moPad =
+payment-due-soon-details">
+                                                                <br>
+Here are the details of your payment:<br>
+<table style=3D"width: 80%; border-collapse: collapse; border-spacing: 0px;=
+">
+<tbody><tr><td style=3D"vertical-align: top; padding: 20px 0px 5px; font-fa=
+mily: Arial, Helvetica, sans-serif; font-size: 16px; color: rgb(65, 64, 66)=
+; border-bottom: 1px solid rgb(65, 64, 66);">Account</td>
+<td style=3D"vertical-align: top; padding: 20px 0px 5px; font-family: Arial=
+, Helvetica, sans-serif; font-size: 16px; color: rgb(65, 64, 66); border-bo=
+ttom: 1px solid rgb(65, 64, 66); font-weight: bold; text-align: right;">Cha=
+se Freedom Unlimited(...0376)</td>
+</tr><tr><td style=3D"vertical-align: top; padding: 20px 0px 5px; font-fami=
+ly: Arial, Helvetica, sans-serif; font-size: 16px; color: rgb(65, 64, 66); =
+border-bottom: 1px solid rgb(65, 64, 66);">Amount</td>
+<td style=3D"vertical-align: top; padding: 20px 0px 5px; font-family: Arial=
+, Helvetica, sans-serif; font-size: 16px; color: rgb(65, 64, 66); border-bo=
+ttom: 1px solid rgb(65, 64, 66); font-weight: bold; text-align: right;">$60=
+1.45</td>
+</tr><tr><td style=3D"vertical-align: top; padding: 20px 0px 5px; font-fami=
+ly: Arial, Helvetica, sans-serif; font-size: 16px; color: rgb(65, 64, 66); =
+border-bottom: 1px solid rgb(65, 64, 66);">Payment authorized on</td>
+<td style=3D"vertical-align: top; padding: 20px 0px 5px; font-family: Arial=
+, Helvetica, sans-serif; font-size: 16px; color: rgb(65, 64, 66); border-bo=
+ttom: 1px solid rgb(65, 64, 66); font-weight: bold; text-align: right;">Jul=
+ 08, 2024</td>
+</tr><tr><td style=3D"vertical-align: top; padding: 20px 0px 5px; font-fami=
+ly: Arial, Helvetica, sans-serif; font-size: 16px; color: rgb(65, 64, 66); =
+border-bottom: 1px solid rgb(65, 64, 66);">Effective date</td>
+<td style=3D"vertical-align: top; padding: 20px 0px 5px; font-family: Arial=
+, Helvetica, sans-serif; font-size: 16px; color: rgb(65, 64, 66); border-bo=
+ttom: 1px solid rgb(65, 64, 66); font-weight: bold; text-align: right;">Jul=
+ 08, 2024</td>
+</tr></tbody></table>
+&nbsp;<br><br><br>
+If you made your payment between 8 PM and 11:59 PM ET, we=E2=80=99ll credit=
+ you for the effective date you chose, but the payment may take 1-2 days to=
+ post.<br>
+&nbsp;<br>
+&nbsp;<br>
+Payments made after 8 PM ET on your due date may result in a late fee on yo=
+ur account. This fee will be automatically reversed when the payment posts =
+to your account in 1-2 days.<br>
+&nbsp;<br>
+&nbsp;<br>
+To cancel a payment scheduled for a future date, please visit us at&nbsp;<a=
+ href=3D"https://www.chase.com/digital/mobile-banking" title=3D"Follow link=
+">Chase Mobile<sup>=C2=AE</sup></a>&nbsp;app or at&nbsp;<a href=3D"https://=
+secure.chase.com/web/auth/nav?navKey=3DrequestDashboard" title=3D"Follow li=
+nk">chase.com</a>.&nbsp;<br>
+&nbsp;<br><br>
+If you have questions or concerns about your account, visit&nbsp;<a href=3D=
+"https://www.chase.com/digital/customer-service" title=3D"Follow link">chas=
+e.com/CustomerService</a>&nbsp;for ways to contact us.<br>
+
+                                                            </td>
+                                                        </tr>
+                                                        <!-- End Body Copy =
+1 -->
+                                                        <!-- Start Closing/=
+Signature -->
+
+                                                        <!-- End Closing/Si=
+gnature -->
+
+                                                        <!-- Start Call to =
+Actions: Use this module if 2 CTA's are required for creative. If only 1 CT=
+A is needed, delete the 2nd CTA -->
+
+                                                        <tr>
+                                                            <td align=3D"le=
+ft" style=3D"vertical-align:top;">
+                                                                <table role=
+=3D"presentation" width=3D"100%" align=3D"left" cellpadding=3D"0" cellspaci=
+ng=3D"0" border=3D"0">
+                                                                    <tbody>=
+<tr>
+                                                                        <td=
+ align=3D"left" style=3D"vertical-align:top;">
+                                                                           =
+ <table role=3D"presentation" width=3D"200" align=3D"left" cellpadding=3D"0=
+" cellspacing=3D"0" border=3D"0" class=3D"fullWidth">
+                                                                           =
+     <tbody><tr>
+                                                                           =
+         <td align=3D"left" style=3D"padding:0px; vertical-align:top; paddi=
+ng: 0px 0px 30px 30px;" class=3D"moPad">
+                                                                           =
+             <table role=3D"presentation" align=3D"left" cellpadding=3D"0" =
+cellspacing=3D"0" border=3D"0" style=3D"vertical-align:top;">
+                                                                           =
+                 <tbody><tr>
+                                                                           =
+                     <td role=3D"button" align=3D"center" style=3D"backgrou=
+nd-color:#0060f0; color: #fffffe; font-size: 16px; font-family: Arial, Helv=
+etica, sans-serif; padding: 10px 0px; border: 1px solid #0060f0; vertical-a=
+lign:top; border-radius:4px; -moz-border-radius: 4px; -webkit-border-radius=
+:4px;width: 168px;">
+                                                                           =
+                         <a href=3D"https://secure.chase.com/web/auth/dashb=
+oard#/dashboard/payBills/paymentsActivity/selectPayee;payeeId=3DpayeeId=3D8=
+46600578;payeeType=3DCREDIT_CARD" rel=3D"noopener noreferrer" target=3D"_bl=
+ank" style=3D"color: #fffffe; text-decoration:none;">See payment activity</=
+a>
+                                                                           =
+                     </td>
+                                                                           =
+                 </tr>
+                                                                           =
+             </tbody></table>
+                                                                           =
+         </td>
+                                                                           =
+     </tr>
+                                                                           =
+ </tbody></table>
+                                                                           =
+ <!--[if mso]></td>
+                                                                        <td=
+><![endif]-->
+
+                                                                        </t=
+d>
+                                                                    </tr>
+                                                                </tbody></t=
+able>
+                                                            </td>
+                                                        </tr>
+                                                        <!-- End - CTA MODU=
+LE -->
+                                                        <!-- Start Body Cop=
+y 3 -->
+
+                                                        <!-- End Body Copy =
+3 -->
+
+                                                        <!-- Start English =
+Footnote -->
+                                                        <tr>
+                                                            <td align=3D"le=
+ft" style=3D"vertical-align:top; padding:0px 30px 20px; font-family:Arial, =
+Helvetica, sans-serif; font-size:12px; color:#717171;" class=3D"moPad font1=
+4">Securely access your accounts in the&nbsp;<a href=3D"https://www.chase.c=
+om/digital/mobile-banking" title=3D"Follow link">Chase Mobile=C2=AE</a>&nbs=
+p;app or at&nbsp;<a href=3D"https://secure.chase.com/web/auth/nav?navKey=3D=
+requestDashboard" title=3D"Follow link">chase.com</a>.<br>
+
+                                                            </td>
+                                                        </tr>
+                                                        <!-- End Footnote -=
+->
+                                                        <!-- Disclosure -->
+                                                        <tr>
+                                                            <td align=3D"le=
+ft" style=3D"vertical-align:top; padding: 0px 0px; background-color: #F6F6F=
+6;">
+                                                                <table role=
+=3D"presentation" width=3D"100%" cellpadding=3D"0" cellspacing=3D"0" border=
+=3D"0">
+                                                                    <tbody>=
+<tr>
+                                                                        <td=
+ align=3D"left" style=3D"vertical-align:top; padding:20px 30px 60px; font-f=
+amily:Arial, Helvetica, sans-serif; font-size:12px; color:#717171;" class=
+=3D"moPad font14">
+                                                                           =
+ <b>ABOUT THIS MESSAGE</b><br>
+<br>
+The Chase Mobile=C2=AE app is available for select mobile devices. Message =
+and data rates may apply.<br><br>
+This service email gives you updates and information about your Chase relat=
+ionship.<br>
+<br>
+Chase cannot guarantee the delivery of alerts and notifications. Wireless o=
+r internet service provider outages or
+other circumstances could delay them. You can always check chase.com or the=
+ Chase Mobile app for the status
+of your accounts including your latest account balances and transaction det=
+ails.<br>
+<br>
+To protect your personal information, please don't reply to this message. C=
+hase won't ask for confidential
+information in an email.<br>
+<br>
+If you have concerns about the authenticity of this message or have questio=
+ns about your account visit <a href=3D"https://www.chase.com/digital/custom=
+er-service" target=3D"_blank" rel=3D"noopener noreferrer">chase.com/Custome=
+rService</a> for ways to contact us.<br />
+<br>
+Your privacy is important to us. See our online&nbsp;<a href=3D"https://www=
+.chase.com/digital/resources/privacy-security" title=3D"Follow link">Securi=
+ty Center</a>&nbsp;to learn how to protect your information.<br>
+<br>
+=C2=A9 2024 JPMorgan Chase &amp; Co.<br>
+
+                                                                        </t=
+d>
+                                                                    </tr>
+                                                                </tbody></t=
+able>
+                                                            </td>
+                                                        </tr>
+                                                        <!-- End Disclosure=
+ -->
+                                                    </tbody></table>
+                                                </td>
+                                                <td align=3D"left" style=3D=
+"vertical-align:top; padding:0px 0px; width:12px;"><img src=3D"https://www.=
+chase.com/content/dam/email/images/white-right.jpg" width=3D"12" height=3D"=
+77" border=3D"0" style=3D"display:block;" alt=3D""></td>
+                                            </tr>
+                                        </tbody></table>
+                                    </td>
+                                </tr>
+                            </tbody></table>
+                        </td>
+                    </tr>
+                    <!--End of Content -->
+                </tbody></table>
+            </td>
+        </tr>
+    </tbody></table>
+</div>
+</body>
+</html>
+
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+[<email.message.Message object at 0x7fd3e219ed40>, <email.message.Message object at 0x7fd3e219e5c0>]
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+[<email.message.Message object at 0x7fd3e219f2b0>, <email.message.Message object at 0x7fd3e219eef0>]
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+[<email.message.Message object at 0x7fd3e219efe0>, <email.message.Message object at 0x7fd3e219ec80>]
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+[<email.message.Message object at 0x7fd3e219f160>, <email.message.Message object at 0x7fd3e219ece0>]
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+[<email.message.Message object at 0x7fd3e219eda0>, <email.message.Message object at 0x7fd3e219e1d0>]
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+[<email.message.Message object at 0x7fd3e219ebf0>, <email.message.Message object at 0x7fd3e219f130>]
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

@@ -11,8 +11,8 @@ from collections import defaultdict, Counter
 
 load_dotenv()
 
-OWNER_NAME = 'User'
-OWNER_EMAIL = 'user@example.com'
+OWNER_NAME = 'Evan Tan'
+OWNER_EMAIL = 'evant5252@gmail.com'
 
 INVITATION_KEYWORDS = INVITATION_KEYWORDS = {
     'invite', 'invites', 'invited', 'inviting', 'invitation', 'introduce', 'introduction', 'RSVP', 'like to meet', 'attend', 'event', 'participate'
@@ -276,8 +276,6 @@ def process_message(message, email_content, email_addresses, interaction_counts,
         date = parse_date(date_str)
         subject = message['Subject']
         body = message.get_payload()
-        print(date_str)
-        print(date)
         contacts = []
 
         if from_address and OWNER_EMAIL not in from_address:
@@ -355,7 +353,7 @@ def main():
         keywords = defaultdict(list)
         email_content = defaultdict(list)
         email_addresses = defaultdict(str)
-        sentiment_analyses = defaultdict(str)
+        sentiment_analyses = defaultdict(str)   
         summary_relationships = defaultdict(str)
         personalization_scores = defaultdict(int)
         response_times_by_contact = defaultdict(list)
@@ -371,20 +369,36 @@ def main():
         threads = defaultdict(lambda: defaultdict(list))
         email_counts = defaultdict(lambda: [0] * 13)
         response_times = []
-
         count = 0
-        for message in mbox:
-            content_type = message.get('Content-Type', '')
-            if content_type is None:
-                continue
 
-            if 'text/plain' not in content_type:
-                count += 1
+        with open('part.txt', 'w') as file:
+            pass
+
+        for message in mbox:
+
+            if message.is_multipart():
+                while count < 25:
+                    count += 1
+                    for part in message.iter_parts():
+                        with open('part.txt', 'a') as f:
+                            f.write(str(part))
+                            f.write('+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
+                        if part.get_content_type() == 'text/plain':
+                            process_message(part, email_content, email_addresses, interaction_counts, invitation_counts, acceptance_counts, first_email_dates, last_email_dates)
+
+            if message.get_content_type() != 'text/plain':
                 continue
+        
+            if not all([
+                message.get('From'),
+                message.get('To'),
+                message.get('Subject'),
+                message.get('Date'),
+                message.get('Body')
+            ]): continue
 
             process_message(message, email_content, email_addresses, interaction_counts, invitation_counts, acceptance_counts, first_email_dates, last_email_dates)
-            
-        print(count)
+
         for contact, emails in email_content.items():
             emails = sorted(emails, key=lambda x: parse_date(x['Date']) or datetime.min)
             # sentiment_analysis(sentiment_analyses, summary_relationships, contact, emails)
@@ -403,13 +417,13 @@ def main():
             user_initiation, personalization_scores, follow_up_rates, keywords, response_times_by_contact, median_response_times
         )
         
-        pos = len([contact['sentiment_analysis'] for contact in output_data if contact['sentiment_analysis'] == 'positive'])
-        neutral = len([contact['sentiment_analysis'] for contact in output_data if contact['sentiment_analysis'] == 'neutral'])
-        neg = len([contact['sentiment_analysis'] for contact in output_data if contact['sentiment_analysis'] == 'negative'])
+        # pos = len([contact['sentiment_analysis'] for contact in output_data if contact['sentiment_analysis'] == 'positive'])
+        # neutral = len([contact['sentiment_analysis'] for contact in output_data if contact['sentiment_analysis'] == 'neutral'])
+        # neg = len([contact['sentiment_analysis'] for contact in output_data if contact['sentiment_analysis'] == 'negative'])
 
-        average_response_time = None
-        if response_times:
-            average_response_time = sum(response_times) / len(response_times)
+        # average_response_time = None
+        # if response_times:
+        #     average_response_time = sum(response_times) / len(response_times)
 
         # result = {
         #     'meeting_frequency': sum([contact['emails_exchanged'] for contact in output_data]) / len(output_data), TODO
@@ -434,12 +448,10 @@ def main():
         # print('General data has been written to general_data.json')
 
     except Exception as e:
-        # with open('tabular_data.json', 'w', encoding='utf-8') as json_file:
-        #     json.dump(output_data, json_file, indent=4)
-
         print(f'An error occurred: {e}')
 
-if __name__ == '__main__':
-    main()
+# if __name__ == '__main__':
+main()
 
 # filter marketing emails, emails displayed in chronological order
+# filter mbox to remove unnecessary headers
