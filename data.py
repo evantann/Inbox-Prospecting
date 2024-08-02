@@ -144,36 +144,32 @@ def groq_summary_relationship(feed):
         print(f"Error in groq_summary_relationship: {e}")
         return "unknown"
 
-def sentiment_analysis(sentiment_analyses, summary_relationships, contact, emails):
+def sentiment_analysis(sentiment_analyses, summary_relationships, address, emails):
     try:
         feed = " ".join([email['Body'] for email in emails])
         sentiment_analysis = groq_general_sentiment(feed)
-        sentiment_analyses[contact] = sentiment_analysis
+        sentiment_analyses[address] = sentiment_analysis
         summary_relationship = groq_summary_relationship(feed)
-        summary_relationships[contact] = summary_relationship
+        summary_relationships[address] = summary_relationship
     except Exception as e:
         print(f"Error in sentiment_analysis: {e}")
 
-def organize_by_thread(threads, contact, emails):
+def organize_by_thread(threads, address, emails):
     try:
         for email in emails:
             subject = email['Subject']
-            if subject and ('Re:' in subject or 'RE' in subject):
-                if contact not in threads:
-                    threads[contact] = {}
-                if subject not in threads[contact]:
-                    threads[contact][subject] = []
-                threads[contact][subject].append(email)
+            if 'Re: ' in subject or 'RE: ' in subject:
+                threads[address][subject].append(email)
     except Exception as e:
         print(f"Error in organize_by_thread: {e}")
 
 def calculate_response_times(threads, response_times_by_contact, response_times, median_response_times):
     try:
-        for contact, emails in threads.items():
-            for email_thread in emails.values():
-                for i in range(1, len(email_thread)):
-                    current_email = email_thread[i]
-                    previous_email = email_thread[i - 1]
+        for contact, threadz in threads.items():
+            for emails in threadz.values():
+                for i in range(1, len(emails)):
+                    current_email = emails[i]
+                    previous_email = emails[i - 1]
                     
                     # Check if the current email is from the owner and the previous one is not
                     if OWNER_EMAIL in current_email['From'] and OWNER_EMAIL not in previous_email['From']:
@@ -183,21 +179,19 @@ def calculate_response_times(threads, response_times_by_contact, response_times,
                             response_time = (current_date - previous_date).seconds
                             response_time /= 3600
                             response_times.append(response_time)
-                            response_times_by_contact.setdefault(contact, []).append(response_time)
+                            response_times_by_contact[contact].append(response_time)
 
         for contact, times in response_times_by_contact.items():
             if times:
                 median_response_times[contact] = np.median(times)
                 response_times_by_contact[contact] = sum(times) / len(times)
-            else:
-                response_times_by_contact[contact] = None
 
     except Exception as e:
         print(f"Error in calculating response times: {e}")
 
-def calculate_follow_up_rate(follow_up, contact, emails):
+def calculate_follow_up_rate(follow_up, address, emails):
     try:
-        from_contact_email_count = sum(1 for email in emails if contact in email['From'])
+        emails_from_contact_count = sum(1 for email in emails if address in email['From'])
         follow_up_count = 0
 
         for i in range(1, len(emails)):
@@ -207,80 +201,104 @@ def calculate_follow_up_rate(follow_up, contact, emails):
             if OWNER_EMAIL in current_email['From'] and OWNER_EMAIL not in previous_email['From']:
                 follow_up_count += 1
 
-        follow_up[contact] = (follow_up_count / from_contact_email_count * 100) if from_contact_email_count > 0 else 0
+        follow_up[address] = (follow_up_count / emails_from_contact_count * 100) if emails_from_contact_count > 0 else 0
+        
     except Exception as e:
         print(f"Error in calculating follow up rate: {e}")
 
-def interaction_frequency(monthly_interactions, email_counts, contact, emails):
+def calculate_interaction_frequency(monthly_interactions, interactions_each_month, address, emails):
     try:
         for email in emails:
             date_str = email["Date"]
             try:
-                date_obj = datetime.strptime(date_str, '%a, %d %b %Y %H:%M:%S %z')
-                month = date_obj.strftime('%m')
-                month = int(month.lstrip('0'))
-                if contact not in email_counts:
-                    email_counts[contact] = {}
-                if month not in email_counts[contact]:
-                    email_counts[contact][month] = 0
-                email_counts[contact][month] += 1
+                date = parse_date(date_str)
+                if date:
+                    month = date.strftime('%m')
+                    month = int(month.lstrip('0'))
+                    interactions_each_month[address][month] += 1
             except ValueError as e:
                 print(f"Error parsing date in interaction_frequency: {e}")
 
-        for contact, values in email_counts.items():
+        for email_address, months in interactions_each_month.items():
             total_sum = 0
             non_zero_months = 0
-            for value in values.values():
-                if value != 0:
-                    total_sum += value
-                    non_zero_months += 1
-            monthly_interactions[contact] = total_sum / non_zero_months if non_zero_months > 0 else 0
+            for month in months:
+                total_sum += month
+                non_zero_months += 1
+            monthly_interactions[email_address] = total_sum / non_zero_months if non_zero_months > 0 else 0
+
     except Exception as e:
         print(f"Error in calculating interaction frequency: {e}")
 
-def user_initiated(user_initiation, contact, emails):
+def user_initiated(user_initiation, address, emails):
     try:
-        user_initiation[contact] = OWNER_EMAIL in emails[0]['From']
+        if not emails:
+            print(address)
+            print("No emails found")
+        user_initiation[address] = OWNER_EMAIL in emails[0]['From']
     except Exception as e:
         print(f"Error in determining user initiation: {e}")
 
-def calculate_personalization_score(personalization_scores, contact, emails):
+def calculate_personalization_score(personalization_scores, address, emails):
     try:
         nlp = spacy.load("en_core_web_sm")
-        if contact not in personalization_scores:
-            personalization_scores[contact] = 0
         for email in emails:
             doc = nlp(email['Body'])
             for ent in doc.ents:
-                personalization_scores[contact] += 1
+                if ent.label_ == 'PERSON':
+                    personalization_scores[address] += 1
     except Exception as e:
         print(f"Error in calculating personalization score: {e}")
 
-def find_keywords(keywords, contact, emails):
+def find_keywords(keywords, address, emails):
     try:
         all_messages = " ".join([email['Body'] for email in emails])
         all_messages = all_messages.lower()
-        all_messages = all_messages.replace('\n', ' ')
-        all_messages = all_messages.replace('.', '')
-        all_messages = all_messages.replace(',', '')
+
+        punctuation_marks = ['.', ',', '!', '?', ':', ';', '\n', '\t', '\r', '(', ')', '[', ']', '{', '}', '<', '>', '"']
+        for marks in punctuation_marks:
+            all_messages = all_messages.replace(marks, '')
+
         all_messages = all_messages.split()
-        filtered_messages = [word for word in all_messages if word not in STOP_WORDS and contact.split()[0].lower() not in word and OWNER_NAME.lower() not in word]
+        filtered_messages = [word for word in all_messages if word not in STOP_WORDS and OWNER_NAME.lower() not in word]
         word_counts = Counter(filtered_messages)
         most_common_words = word_counts.most_common(5)
         top_words = [word for word, count in most_common_words]
-        keywords[contact] = top_words
+        keywords[address] = top_words
+        
     except Exception as e:
         print(f"Error in finding keywords: {e}")
 
 def process_message(message, email_content, contact_names, interaction_counts, invitation_counts, acceptance_counts, first_email_dates, last_email_dates):
     try:
-        from_address = message['From']
-        to_addresses = message['To']
-        date_str = message['Date']
-        date = parse_date(date_str)
-        subject = message['Subject']
-        body = message['Body']
         contacts = []
+
+        if message['From']:
+            from_address = message['From']
+        else:
+            from_address = ''
+
+        if message['To']:
+            to_addresses = message['To']
+        else:
+            to_addresses = ''
+
+        if message['Date']:
+            date_str = message['Date']
+            date = parse_date(date_str)
+        else:
+            date_str = ''
+            date = None
+
+        if message['Subject']:
+            subject = message['Subject']
+        else:
+            subject = ''
+
+        if message['Body']:
+            body = message['Body']
+        else:
+            body = ' '
 
         if OWNER_EMAIL not in from_address: # if the owner is not the sender, add the sender to the contact list
             split_address = from_address.split('<')
@@ -334,7 +352,7 @@ def process_message(message, email_content, contact_names, interaction_counts, i
             if OWNER_EMAIL in from_address and is_acceptance(subject, body):
                 acceptance_counts[address] += 1
 
-            if date is not None:
+            if date:
                 if first_email_dates[address] is None or date < first_email_dates[address]:
                     first_email_dates[address] = date
                 if last_email_dates[address] is None or date > last_email_dates[address]:
@@ -346,22 +364,22 @@ def process_message(message, email_content, contact_names, interaction_counts, i
 def generate_tabular_data(email_content, contact_names, interaction_counts, invitation_counts, acceptance_counts, first_email_dates, last_email_dates, sentiment_analyses, summary_relationships, monthly_interactions, user_initiation, personalization_scores, follow_up_rates, keywords, response_times_by_contact, median_response_times):
     try:
         data = [{
-            'contact': contact,
-            'email_address': contact_names.get(contact, 'N/A'),
+            'contact': contact_names.get(contact, 'N/A'),
+            'email_address': contact if contact else 'N/A',
             'emails_exchanged': interaction_counts.get(contact, 0),
             'number_of_invitations_received': invitation_counts.get(contact, 0),
             'number_of_accepted_invitations': acceptance_counts.get(contact, 0),
-            'duration_known (months)': ((last_email_dates.get(contact, datetime.min) - first_email_dates.get(contact, datetime.min)).days) / 30 if first_email_dates.get(contact) and last_email_dates.get(contact) else None,
+            'duration_known (months)': ((last_email_dates.get(contact, datetime.min) - first_email_dates.get(contact, datetime.min)).days) / 30 if first_email_dates.get(contact) and last_email_dates.get(contact) else 'N/A',
             'emails': email_content.get(contact, []),
             'sentiment_analysis': sentiment_analyses.get(contact, 'N/A'),
             'summary_relationship': summary_relationships.get(contact, 'N/A'),
             'user_initiated': user_initiation.get(contact, False),
             'interaction_frequency (emails per month)': monthly_interactions.get(contact, 0),
             'follow_up_rate': follow_up_rates.get(contact, 0),
-            'average_response_time (hours)': response_times_by_contact.get(contact, 'Not enough data'),
-            'median_response_time (hours)': median_response_times.get(contact, 'Not enough data'),
+            'average_response_time (hours)': response_times_by_contact.get(contact, 0),
+            'median_response_time (hours)': median_response_times.get(contact, 0),
             'keywords': keywords.get(contact, []),
-            'personalization_score': personalization_scores.get(contact, 0),
+            'personalization_score': personalization_scores.get(contact, 0) / interaction_counts.get(contact, 1)
         } for contact in email_content]
         return data
     except Exception as e:
@@ -370,8 +388,6 @@ def generate_tabular_data(email_content, contact_names, interaction_counts, invi
 
 def main():
     try:
-        mbox = mailbox.mbox('my.mbox')
-
         keywords = defaultdict(list)
         email_content = defaultdict(list)
         contact_names = defaultdict(str)
@@ -389,30 +405,28 @@ def main():
         last_email_dates = defaultdict(lambda: None)
         first_email_dates = defaultdict(lambda: None)
         threads = defaultdict(lambda: defaultdict(list))
-        email_counts = defaultdict(lambda: [0] * 13)
+        interactions_each_month = defaultdict(lambda: [0] * 13)
         response_times = []
-        count = 0
 
         with open('cleaned_mbox.json', 'r') as file:
             data = json.load(file)
         
         for entry in data:
             process_message(entry, email_content, contact_names, interaction_counts, invitation_counts, acceptance_counts, first_email_dates, last_email_dates)
-        
-        with open('email_content.json', 'w', encoding='utf-8') as json_file:
-            json.dump(email_content, json_file, indent=4)
-
-        print('Email content has been written to email_content.json')
 
         for address, emails in email_content.items():
-            emails = sorted(emails, key=lambda x: parse_date(x['Date']) or datetime.min)
             # sentiment_analysis(sentiment_analyses, summary_relationships, contact, emails)
-            organize_by_thread(threads, address, emails)
-            interaction_frequency(monthly_interactions, email_counts, address, emails)
-            user_initiated(user_initiation, address, emails)
+            calculate_interaction_frequency(monthly_interactions, interactions_each_month, address, emails)
             calculate_personalization_score(personalization_scores, address, emails)
-            calculate_follow_up_rate(follow_up_rates, address, emails)
             find_keywords(keywords, address, emails)
+
+            valid_emails = [email for email in emails if parse_date(email['Date']) is not None]
+            sorted_emails = sorted(valid_emails, key=lambda x: parse_date(x['Date']))
+            organize_by_thread(threads, address, sorted_emails)
+            calculate_follow_up_rate(follow_up_rates, address, sorted_emails)
+            if address == 'contact_support.pzc@de(%)($)lica(%)($)rd.se' or address == 'CollegeBoard@noreply.collegeboard.org' or address == 'support_rk_royal@163.com' or address == 'peterwongka@yahoo.com':
+                
+            user_initiated(user_initiation, address, sorted_emails)
         
         calculate_response_times(threads, response_times_by_contact, response_times, median_response_times)
         
