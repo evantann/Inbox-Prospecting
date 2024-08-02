@@ -30,7 +30,8 @@ def process_mbox(input_mbox):
                         f.write(part.get_payload(decode=True).decode('utf-8', errors='ignore') + '\n')
                         
                         # Separate different parts of the same email
-                        f.write("\n" + "="*50 + "\n")
+                        f.write("\n" + "="*50 + "Part" + "="*50 + "\n")
+            f.write("\n" + "="*50 + "Message" + "="*50 + "\n")
 
     print("Processed mbox file saved to email.txt")
 

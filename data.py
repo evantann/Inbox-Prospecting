@@ -1,4 +1,5 @@
 import os
+import re
 import json
 import spacy
 import mailbox
@@ -39,14 +40,22 @@ client = Groq(
     api_key = os.getenv("GROQ_API_KEY"),
 )
 
-def parse_date(date_str):
-    try:
-        # Remove any extra text after the timezone offset
-        clean_date_str = date_str.split(' (')[0]
-        return datetime.strptime(clean_date_str, '%a, %d %b %Y %H:%M:%S %z')
-    except ValueError as e:
-        print(f"Error parsing date: {e}")
-        return None
+def parse_date(date_string):
+    date_string = re.sub(r'\s\([A-Z]{2,}\)$', '', date_string)
+
+    formats = [
+        '%a, %d %b %Y %H:%M:%S %z',
+        '%a %d %b %Y %H:%M:%S %z',
+        '%d %b %Y %H:%M:%S %z'
+    ]
+    
+    for format_string in formats:
+        try:
+            return datetime.strptime(date_string, format_string)
+        except ValueError:
+            continue
+    
+    return None
 
 def is_invitation(subject, body):
     try:
@@ -263,11 +272,6 @@ def find_keywords(keywords, contact, emails):
     except Exception as e:
         print(f"Error in finding keywords: {e}")
 
-import mailbox
-import json
-from collections import defaultdict
-from datetime import datetime
-
 def process_message(message, email_content, contact_names, interaction_counts, invitation_counts, acceptance_counts, first_email_dates, last_email_dates):
     try:
         from_address = message['From']
@@ -287,25 +291,29 @@ def process_message(message, email_content, contact_names, interaction_counts, i
                 if address not in contact_names:
                     contact_names[address] = name
             else:
+                address = from_address.strip()
                 if address not in contact_names or contact_names[address] is None: # email only format; if not none, name is already known
                     contact_names[address] = None
-        elif OWNER_EMAIL in from_address:
+        elif OWNER_EMAIL in from_address: # not else because user can be part of a group email and we ignore this case
             split_to_addresses = to_addresses.split(',')
             if len(split_to_addresses) > 1: # multiple recipients
                 for address in split_to_addresses:
-                    address = address.strip()
-                    contacts.append(address)
-                    if address not in contact_names or contact_names[address] is None: # multiple recipients format does not include names
-                        contact_names[address] = None
+                    if OWNER_EMAIL not in address:
+                        address = address.strip()
+                        contacts.append(address)
+                        if address not in contact_names or contact_names[address] is None: # multiple recipients format does not include names
+                            contact_names[address] = None
             else:
                 split_address = from_address.split('<')
                 if len(split_address) > 1:
                     name = split_address[0].strip()
                     address = split_address[1].replace('>', '').strip()
-                    contacts.append(address)
-                    if address not in contact_names:
-                        contact_names[address] = name
+                    if OWNER_EMAIL not in address: # handle case where owner is the sender and recipient
+                        contacts.append(address)
+                        if address not in contact_names:
+                            contact_names[address] = name
                 else:
+                    address = from_address.strip()
                     if address not in contact_names or contact_names[address] is None: # email only format; if not none, name is already known
                         contact_names[address] = None
 
@@ -317,17 +325,16 @@ def process_message(message, email_content, contact_names, interaction_counts, i
                 'Date': date_str,
                 'Body': body
             })
+
             interaction_counts[address] += 1
 
-            if OWNER_EMAIL not in from_address and is_invitation(subject, body):
+            if address in from_address and is_invitation(subject, body):
                 invitation_counts[address] += 1
             
             if OWNER_EMAIL in from_address and is_acceptance(subject, body):
                 acceptance_counts[address] += 1
 
-            if address == from_address and is_invitation(subject, body):
-                invitation_counts[address] += 1
-            if date:
+            if date is not None:
                 if first_email_dates[address] is None or date < first_email_dates[address]:
                     first_email_dates[address] = date
                 if last_email_dates[address] is None or date > last_email_dates[address]:
@@ -386,11 +393,16 @@ def main():
         response_times = []
         count = 0
 
-        with open('output.json', 'r') as file:
+        with open('cleaned_mbox.json', 'r') as file:
             data = json.load(file)
         
         for entry in data:
             process_message(entry, email_content, contact_names, interaction_counts, invitation_counts, acceptance_counts, first_email_dates, last_email_dates)
+        
+        with open('email_content.json', 'w', encoding='utf-8') as json_file:
+            json.dump(email_content, json_file, indent=4)
+
+        print('Email content has been written to email_content.json')
 
         for address, emails in email_content.items():
             emails = sorted(emails, key=lambda x: parse_date(x['Date']) or datetime.min)
