@@ -7,13 +7,7 @@
 /static
 
 /uploads
-
+g
 my.mbox
 
-tabular_data.json
-
-cleaned_mbox.json
-
-mbox_extract.json
-
-/txt/
+new_tabular_data.json

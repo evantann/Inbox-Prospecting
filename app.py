@@ -1,319 +1,562 @@
 import os
+import re
 import json
+import spacy
 import mailbox
+import matplotlib
+import numpy as np
 import pandas as pd
 import seaborn as sns
-import matplotlib
 import matplotlib.pyplot as plt
 from groq import Groq
 from datetime import datetime
 from dotenv import load_dotenv
-from collections import defaultdict
+from collections import defaultdict, Counter
 from flask import Flask, render_template, request, jsonify, send_from_directory
 
 load_dotenv()
 
 app = Flask(__name__)
-matplotlib.use('Agg')
+matplotlib.use('Agg') # Required for matplotlib to work with Flask
 
-# Configuration
+OWNER_NAME = 'Evan Tan'
+OWNER_EMAIL = 'evant5252@gmail.com'
 UPLOAD_FOLDER = 'uploads/'
 STATIC_FOLDER = 'static/'
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.config['STATIC_FOLDER'] = STATIC_FOLDER
 
-# Initialize Groq client
+SPAM = {"jobs-listings@linkedin.com", "info@email.meetup.com", "team@mail.notion.so", "no-reply@messages.doordash.com", "updates-noreply@linkedin.com", "team@hiwellfound.com", "Starbucks@e.starbucks.com", "email@washingtonpost.com", "messages-noreply@linkedin.com", "rewards@e.starbucks.com", "info@meetup.com", "college@coll.herffjones.com", "venmo@email.venmo.com", "aws-marketing-email-replies@amazon.com", "chen.li@rexpandjob.com", "invitations@linkedin.com", "members@respond.kp.org", "no-reply@doordash.com", "bankofamerica@emcom.bankofamerica.com", "learn@itr.mail.codecademy.com", "noreply@alliance-mail.oa-bsa.org", "solatwestvillage@emailrelay.com", "alexanderqluong@gmail.com", "no-reply@modernmsg.com"}
+INVITATION_KEYWORDS = INVITATION_KEYWORDS = {
+    'invite', 'invites', 'invited', 'inviting', 'invitation', 'introduce', 'introduction', 'RSVP', 'like to meet', 'attend', 'event', 'participate'
+}
+ACCEPTANCE_KEYWORDS = {
+    'accept', 'will attend'
+}
+STOP_WORDS = {'i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you', 'your', 'yours', 'yourself', 'yourselves',
+    'he', 'him', 'his', 'himself', 'she', 'her', 'hers', 'herself', 'it', 'its', 'itself', 'they', 'them', 'their',
+    'theirs', 'themselves', 'what', 'which', 'who', 'whom', 'this', 'that', 'these', 'those', 'am', 'is', 'are',
+    'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'having', 'do', 'does', 'did', 'doing', 'a', 'an',
+    'the', 'and', 'but', 'if', 'or', 'because', 'as', 'until', 'while', 'of', 'at', 'by', 'for', 'with', 'about',
+    'against', 'between', 'into', 'through', 'during', 'before', 'after', 'above', 'below', 'to', 'from', 'up',
+    'down', 'in', 'out', 'on', 'off', 'over', 'under', 'again', 'further', 'then', 'once', 'here', 'there', 'when',
+    'where', 'why', 'how', 'all', 'any', 'both', 'each', 'few', 'more', 'most', 'other', 'some', 'such', 'no', 'nor',
+    'not', 'only', 'own', 'same', 'so', 'than', 'too', 'very', 's', 't', 'can', 'will', 'just', 'don', 'should',
+    'now', 'hello', 'dear', 'hi', 'hey', 'regards', 'thanks', 'thank', 'best', 'kind', 'warm', 'sincerely', 'yours', 'tomorrow',
+    'cheers', 'everything', 'next', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday', 'need', 'please',
+    'january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december',
+    '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', 'am', 'pm'
+}
+
 client = Groq(
-    api_key=os.getenv("GROQ_API_KEY"),
+    api_key = os.getenv("GROQ_API_KEY"),
 )
 
-OWNER_EMAIL = 'user@example.com'
-INVITATION_KEYWORDS = ['invite', 'invites', 'invited', 'inviting', 'invitation', 'introduce', 'introduction']
+def parse_date(date_string):
+    date_string = re.sub(r'\s\([A-Z]{2,}\)$', '', date_string)
 
-def parse_date(date_str):
-    try:
-        # Remove any extra text after the timezone offset
-        clean_date_str = date_str.split(' (')[0]
-        return datetime.strptime(clean_date_str, '%a, %d %b %Y %H:%M:%S %z')
-    except ValueError as e:
-        print(f"Error parsing date: {e}")
-        return None
+    formats = [
+        '%a, %d %b %Y %H:%M:%S %z',
+        '%a %d %b %Y %H:%M:%S %z',
+        '%d %b %Y %H:%M:%S %z'
+    ]
+    
+    for format_string in formats:
+        try:
+            return datetime.strptime(date_string, format_string)
+        except ValueError:
+            continue
+    
+    return None
 
 def is_invitation(subject, body):
-    subject = subject.lower() if subject else ''
-    body = body.lower() if body else ''
-    return any(keyword in subject or keyword in body for keyword in INVITATION_KEYWORDS)
+    try:
+        subject = subject.lower() if subject else ''
+        body = body.lower() if body else ''
+        return any(keyword in subject or keyword in body for keyword in INVITATION_KEYWORDS)
+    except Exception as e:
+        print(f"Error in is_invitation: {e}")
+        return False
 
-def calculate_response_time(email_groups):
-    threads = defaultdict(list)
-    response_times = []
+def is_acceptance(subject, body):
+    try:
+        subject = subject.lower() if subject else ''
+        body = body.lower() if body else ''
+        return any(keyword in subject or keyword in body for keyword in ACCEPTANCE_KEYWORDS)
+    except Exception as e:
+        print(f"Error in is_acceptance: {e}")
+        return False
 
-    for contact, emails in email_groups.items():
-        for email in emails:
-            subject = email['Subject']
-            if subject and ('Re:' in subject or 'RE' in subject):
-                threads[subject].append(email)
-
-    for thread_emails in threads.values():
-        sorted_emails = sorted(thread_emails, key=lambda x: parse_date(x['Date']) or datetime.min)
-        for i in range(1, len(sorted_emails)):
-            current_email = sorted_emails[i]
-            previous_email = sorted_emails[i - 1]
-            
-            if OWNER_EMAIL in current_email['From'] and OWNER_EMAIL not in previous_email['From']:
-                response_time = (parse_date(current_email['Date']) - parse_date(previous_email['Date'])).seconds
-                response_time /= 3600
-                response_times.append(response_time)
-
-    if response_times:
-        average_response_time = sum(response_times) / len(response_times)
-        return average_response_time
-    else:
-        return None
-
-def process_message(message, email_groups, interaction_counts, invitation_counts, first_email_dates, last_email_dates):
-    from_address = message['From']
-    to_addresses = message.get_all('To', [])
-    date_str = message['Date']
-    date = parse_date(date_str)
-    subject = message['Subject']
-    body = message.get_payload()
-
-    contacts = []
-
-    if from_address and OWNER_EMAIL not in from_address:
-        contacts.append(from_address.split('<')[0].strip())
-
-    for to_address in to_addresses:
-        for address in to_address.split(','):
-            address = address.strip()
-            if OWNER_EMAIL not in address:
-                contacts.append(address.split('<')[0].strip())
-
-    for contact in contacts:
-        email_groups[contact].append({
-            'From': from_address,
-            'To': to_addresses,
-            'Subject': subject,
-            'Date': date_str,
-            'Body': body
-        })
-        interaction_counts[contact] += 1
-
-        if contact == from_address and is_invitation(subject, body):
-            invitation_counts[contact] += 1
-
-        if date:
-            if first_email_dates[contact] is None or date < first_email_dates[contact]:
-                first_email_dates[contact] = date
-            if last_email_dates[contact] is None or date > last_email_dates[contact]:
-                last_email_dates[contact] = date
-
-def prepare_output(email_groups, interaction_counts, invitation_counts, first_email_dates, last_email_dates, sentiment_analyses, summary_relationships):
-    return {
-        'number_of_unique_contacts': len(email_groups),
-        'average_response_time': calculate_response_time(email_groups),
-        'contacts': [
-            {
-                'contact': contact,
-                'number_of_interactions': interaction_counts[contact],
-                'duration_known': (last_email_dates[contact] - first_email_dates[contact]).days if first_email_dates[contact] and last_email_dates[contact] else None,
-                'number_of_invitations': invitation_counts[contact],
-                'email_rate': (interaction_counts[contact] / ((last_email_dates[contact] - first_email_dates[contact]).days + 1)) if first_email_dates[contact] and last_email_dates[contact] else None,
-                'is_influencer': invitation_counts[contact] > 1,
-                'emails': email_groups[contact],
-                'sentiment_analysis': sentiment_analyses[contact],
-                'summary_relationship': summary_relationships[contact]
-            }
-            for contact in email_groups
-        ]
-    }
-
-def groq_sentiment_analysis(feed):
-    chat_completion = client.chat.completions.create(
-        model="llama3-70b-8192",
-        messages=[
-            {
-                "role": "system",
-                "content": "you are a sentiment analysis expert"
-            },
-            {
-                "role": "user",
-                "content": "Conduct sentiment analysis on the provided email content. The analysis must result in a single word indicating the sender's sentiment, chosen exclusively from \"positive,\" \"negative,\" or \"neutral.\" Please return only the selected word."
-            },
-            {
-                "role": "user",
-                "content": feed
-            }
-        ],
-        temperature=1,
-        max_tokens=1024,
-        top_p=1,
-        stream=False,
-        stop=None,
-    )
-    
-    sentiment_analysis = chat_completion.choices[0].message.content
-    return sentiment_analysis
+def groq_general_sentiment(feed):
+    try:
+        chat_completion = client.chat.completions.create(
+            model="llama3-70b-8192",
+            messages=[
+                {
+                    "role": "system",
+                    "content": "you are a sentiment analysis expert"
+                },
+                {
+                    "role": "user",
+                    "content": """
+                        Conduct sentiment analysis on the provided email content.
+                        The analysis must result in a single word indicating the sender's sentiment, chosen exclusively from "positive," "negative," or "neutral."
+                        Please return only the selected word.
+                    """
+                },
+                {
+                    "role": "user",
+                    "content": feed
+                }
+            ],
+            temperature=1,
+            max_tokens=1024,
+            top_p=1,
+            stream=False,
+            stop=None,
+        )
+        
+        sentiment_analysis = chat_completion.choices[0].message.content
+        return sentiment_analysis
+    except Exception as e:
+        print(f"Error in groq_general_sentiment: {e}")
+        return "unknown"
 
 def groq_summary_relationship(feed):
-    chat_completion = client.chat.completions.create(
-        model="llama3-70b-8192",
-        messages=[
-            {
-                "role": "system",
-                "content": "you are a sentiment analysis expert"
-            },
-            {
-                "role": "user",
-                "content": "Summarize my relationship with this contact based on provided email content in just one sentence. Don't start with Here is a summary of your relationship with this contact in one sentence:"
-            },
-            {
-                "role": "user",
-                "content": feed
-            }
-        ],
-        temperature=1,
-        max_tokens=1024,
-        top_p=1,
-        stream=False,
-        stop=None,
-    )
+    try:
+        chat_completion = client.chat.completions.create(
+            model="llama3-70b-8192",
+            messages=[
+                {
+                    "role": "system",
+                    "content": "you are a sentiment analysis expert"
+                },
+                {
+                    "role": "user",
+                    "content": """
+                        Summarize my relationship with this contact based on provided email content in just one sentence.
+                        Don't start with Here is a summary of your relationship with this contact in one sentence:
+                    """
+                },
+                {
+                    "role": "user",
+                    "content": feed
+                }
+            ],
+            temperature=1,
+            max_tokens=1024,
+            top_p=1,
+            stream=False,
+            stop=None,
+        )
 
-    summary = chat_completion.choices[0].message.content
-    return summary
+        summary = chat_completion.choices[0].message.content
+        return summary
+    except Exception as e:
+        print(f"Error in groq_summary_relationship: {e}")
+        return "unknown"
 
-def visualize_data():
-    save_location = app.config['STATIC_FOLDER']
+def sentiment_analysis(sentiment_analyses, summary_relationships, address, emails):
+    try:
+        feed = " ".join([email['Body'] for email in emails])
+        sentiment_analysis = groq_general_sentiment(feed)
+        sentiment_analyses[address] = sentiment_analysis
+        summary_relationship = groq_summary_relationship(feed)
+        summary_relationships[address] = summary_relationship
+    except Exception as e:
+        print(f"Error in sentiment_analysis: {e}")
 
-    # Load the JSON data
-    with open('email_data.json', 'r') as file:
-        data = json.load(file)
+def organize_by_thread(threads, address, emails):
+    try:
+        for email in emails:
+            subject = email['Subject']
+            if 'Re: ' in subject or 'RE: ' in subject:
+                threads[address][subject].append(email)
+    except Exception as e:
+        print(f"Error in organize_by_thread: {e}")
 
-    # Convert JSON data to DataFrame
-    contacts = data['contacts']
-    df = pd.DataFrame(contacts)
+def calculate_response_times(threads, response_times_by_contact, response_times, median_response_times):
+    try:
+        for contact, threadz in threads.items():
+            for emails in threadz.values():
+                for i in range(1, len(emails)):
+                    current_email = emails[i]
+                    previous_email = emails[i - 1]
+                    
+                    # Check if the current email is from the owner and the previous one is not
+                    if OWNER_EMAIL in current_email['From'] and OWNER_EMAIL not in previous_email['From']:
+                        current_date = parse_date(current_email['Date'])
+                        previous_date = parse_date(previous_email['Date'])
+                        if current_date and previous_date:
+                            response_time = (current_date - previous_date).seconds
+                            response_time /= 3600
+                            response_times.append(response_time)
+                            response_times_by_contact[contact].append(response_time)
 
-    # Ensure 'duration_known' is a numeric column
-    df['duration_known'] = df['duration_known'].fillna(0).astype(float)
+        for contact, times in response_times_by_contact.items():
+            if times:
+                median_response_times[contact] = np.median(times)
+                response_times_by_contact[contact] = sum(times) / len(times)
 
-    # Set up the seaborn style
-    sns.set(style="whitegrid")
+    except Exception as e:
+        print(f"Error in calculating response times: {e}")
 
-    # Bar Chart of Number of Interactions
-    plt.figure(figsize=(12, 6))
-    sns.barplot(x='contact', y='number_of_interactions', data=df, palette='viridis')
-    plt.xticks(rotation=45, ha='right')
-    plt.title('Number of Interactions per Contact')
-    plt.xlabel('Contact')
-    plt.ylabel('Number of Interactions')
-    plt.tight_layout()
-    plt.savefig(save_location + 'number_of_interactions.png')  # Save the figure
-    plt.close()
+def calculate_follow_up_rate(follow_up, address, emails):
+    try:
+        emails_from_contact_count = sum(1 for email in emails if address in email['From'])
+        follow_up_count = 0
 
-    # Histogram of Email Rate
-    plt.figure(figsize=(8, 6))
-    sns.histplot(df['email_rate'], bins=10, kde=True, color='blue')
-    plt.title('Distribution of Email Rate')
-    plt.xlabel('Email Rate')
-    plt.ylabel('Frequency')
-    plt.tight_layout()
-    plt.savefig(save_location + 'email_rate_distribution.png')  # Save the figure
-    plt.close()
+        for i in range(1, len(emails)):
+            current_email = emails[i]
+            previous_email = emails[i - 1]
 
-    # Pie Chart of Sentiment Analysis
-    sentiment_counts = df['sentiment_analysis'].value_counts()
-    plt.figure(figsize=(8, 8))
-    plt.pie(sentiment_counts, labels=sentiment_counts.index, autopct='%1.1f%%', colors=sns.color_palette('pastel'))
-    plt.title('Distribution of Sentiment Analysis')
-    plt.savefig(save_location + 'sentiment_analysis_pie_chart.png')  # Save the figure
-    plt.close()
+            if OWNER_EMAIL in current_email['From'] and OWNER_EMAIL not in previous_email['From']:
+                follow_up_count += 1
 
-    # Bar Chart of Number of Invitations
-    plt.figure(figsize=(12, 6))
-    sns.barplot(x='contact', y='number_of_invitations', data=df, palette='coolwarm')
-    plt.xticks(rotation=45, ha='right')
-    plt.title('Number of Invitations per Contact')
-    plt.xlabel('Contact')
-    plt.ylabel('Number of Invitations')
-    plt.tight_layout()
-    plt.savefig(save_location + 'number_of_invitations.png')  # Save the figure
-    plt.close()
+        follow_up[address] = (follow_up_count / emails_from_contact_count * 100) if emails_from_contact_count > 0 else 0
+        
+    except Exception as e:
+        print(f"Error in calculating follow up rate: {e}")
 
-    # Scatter Plot of Email Rate vs. Number of Interactions
-    plt.figure(figsize=(10, 6))
-    sns.scatterplot(x='email_rate', y='number_of_interactions', data=df, hue='sentiment_analysis', palette='deep')
-    plt.title('Email Rate vs. Number of Interactions')
-    plt.xlabel('Email Rate')
-    plt.ylabel('Number of Interactions')
-    plt.legend(title='Sentiment Analysis')
-    plt.tight_layout()
-    plt.savefig(save_location + 'email_rate_vs_interactions.png')  # Save the figure
-    plt.close()
+def calculate_interaction_frequency(monthly_interactions, interactions_each_month, address, emails):
+    try:
+        for email in emails:
+            date_str = email["Date"]
+            try:
+                date = parse_date(date_str)
+                if date:
+                    month = date.strftime('%m')
+                    month = int(month.lstrip('0'))
+                    interactions_each_month[address][month] += 1
+            except ValueError as e:
+                print(f"Error parsing date in interaction_frequency: {e}")
+
+        for email_address, months in interactions_each_month.items():
+            total_sum = 0
+            non_zero_months = 0
+            for month in months:
+                total_sum += month
+                if month > 0:
+                    non_zero_months += 1
+            monthly_interactions[email_address] = total_sum / non_zero_months if non_zero_months > 0 else 0
+
+    except Exception as e:
+        print(f"Error in calculating interaction frequency: {e}")
+
+def user_initiated(user_initiation, address, emails):
+    try:
+        user_initiation[address] = OWNER_EMAIL in emails[0]['From']
+    except Exception as e:
+        print(f"Error in determining user initiation: {e}")
+
+def calculate_personalization_score(personalization_scores, address, emails):
+    try:
+        nlp = spacy.load("en_core_web_sm")
+        for email in emails:
+            if OWNER_EMAIL in email['From']:
+                doc = nlp(email['Body'])
+                for ent in doc.ents:
+                    if ent.label_ == 'PERSON':
+                        personalization_scores[address] += 1
+    except Exception as e:
+        print(f"Error in calculating personalization score: {e}")
+
+def find_keywords(keywords, address, emails):
+    try:
+        all_messages = " ".join([email['Body'] for email in emails])
+        all_messages = all_messages.lower()
+
+        punctuation_marks = ['.', ',', '!', '?', ':', ';', '\n', '\t', '\r', '(', ')', '[', ']', '{', '}', '<', '>', '"', '—', '-', '_', '/', '\\', '|', '@', '#', '$', '%', '^', '&', '*', '+', '=', '~', '`']
+        for marks in punctuation_marks:
+            all_messages = all_messages.replace(marks, '')
+
+        all_messages = all_messages.split()
+        filtered_messages = [word for word in all_messages if word not in STOP_WORDS and OWNER_NAME.lower() not in word]
+        word_counts = Counter(filtered_messages)
+        most_common_words = word_counts.most_common(5)
+        top_words = [word for word, count in most_common_words]
+        keywords[address] = top_words
+        
+    except Exception as e:
+        print(f"Error in finding keywords: {e}")
+
+def process_message(message, email_content, contact_names, interaction_counts, invitation_counts, acceptance_counts, first_email_dates, last_email_dates):
+    try:
+        contacts = []
+
+        if message['From']:
+            from_address = message['From']
+        else:
+            from_address = ''
+
+        if message['To']:
+            to_addresses = message['To']
+        else:
+            to_addresses = ''
+
+        if message['Date']:
+            date_str = message['Date']
+            date = parse_date(date_str)
+        else:
+            date_str = ''
+            date = None
+
+        if message['Subject']:
+            subject = message['Subject']
+        else:
+            subject = ''
+
+        if message['Body']:
+            body = message['Body']
+        else:
+            body = ' '
+
+        if OWNER_EMAIL not in from_address: # if the owner is not the sender, add the sender to the contact list
+            split_address = from_address.split('<')
+            if len(split_address) > 1: #  Two name-address formats: First Last <email> OR email
+                name = split_address[0].strip()
+                address = split_address[1].replace('>', '').strip()
+                contacts.append(address)
+                if address not in contact_names:
+                    contact_names[address] = name
+            else:
+                address = from_address.strip()
+                if address not in contact_names or contact_names[address] is None: # email only format; if not none, name is already known
+                    contact_names[address] = None
+        elif OWNER_EMAIL in from_address: # not else because user can be part of a group email and we ignore this case
+            split_to_addresses = to_addresses.split(',')
+            if len(split_to_addresses) > 1: # multiple recipients
+                for address in split_to_addresses:
+                    if OWNER_EMAIL not in address:
+                        address = address.strip()
+                        contacts.append(address)
+                        if address not in contact_names or contact_names[address] is None: # multiple recipients format does not include names
+                            contact_names[address] = None
+            else:
+                split_address = from_address.split('<')
+                if len(split_address) > 1:
+                    name = split_address[0].strip()
+                    address = split_address[1].replace('>', '').strip()
+                    if OWNER_EMAIL not in address: # handle case where owner is the sender and recipient
+                        contacts.append(address)
+                        if address not in contact_names:
+                            contact_names[address] = name
+                else:
+                    address = from_address.strip()
+                    if address not in contact_names or contact_names[address] is None: # email only format; if not none, name is already known
+                        contact_names[address] = None
+
+        for address in contacts:
+            email_content[address].append({
+                'From': from_address,
+                'To': to_addresses,
+                'Subject': subject,
+                'Date': date_str,
+                'Body': body
+            })
+
+            interaction_counts[address] += 1
+
+            if address in from_address and is_invitation(subject, body):
+                invitation_counts[address] += 1
+            
+            if OWNER_EMAIL in from_address and is_acceptance(subject, body):
+                acceptance_counts[address] += 1
+
+            if date:
+                if first_email_dates[address] is None or date < first_email_dates[address]:
+                    first_email_dates[address] = date
+                if last_email_dates[address] is None or date > last_email_dates[address]:
+                    last_email_dates[address] = date
+
+    except Exception as e:
+        print(f"Error processing message: {e}")
+
+def generate_tabular_data(email_content, contact_names, interaction_counts, invitation_counts, acceptance_counts, first_email_dates, last_email_dates, sentiment_analyses, summary_relationships, monthly_interactions, user_initiation, personalization_scores, follow_up_rates, keywords, response_times_by_contact, median_response_times):
+    try:
+        data = [{
+            'contact': contact_names.get(contact, 'N/A'),
+            'email_address': contact if contact else 'N/A',
+            'emails_exchanged': interaction_counts.get(contact, 0),
+            'number_of_invitations_received': invitation_counts.get(contact, 0),
+            'number_of_accepted_invitations': acceptance_counts.get(contact, 0),
+            'duration_known (months)': ((last_email_dates.get(contact) - first_email_dates.get(contact)).days) / 30 if first_email_dates.get(contact) and last_email_dates.get(contact) else 'N/A',
+            'emails': email_content.get(contact, []),
+            'sentiment_analysis': sentiment_analyses.get(contact, 'N/A'),
+            'summary_relationship': summary_relationships.get(contact, 'N/A'),
+            'user_initiated': user_initiation.get(contact, False),
+            'interaction_frequency (emails per month)': monthly_interactions.get(contact, 0),
+            'follow_up_rate': follow_up_rates.get(contact, 0),
+            'average_response_time (hours)': response_times_by_contact.get(contact, 0),
+            'median_response_time (hours)': median_response_times.get(contact, 0),
+            'keywords': keywords.get(contact, []),
+            'personalization_score': personalization_scores.get(contact, 0) / sum(1 for email in email_content.get(contact, []) if OWNER_EMAIL in email['From']) if sum(1 for email in email_content.get(contact, []) if OWNER_EMAIL in email['From']) > 0 else 0
+        } for contact in email_content]
+        return data
+    except Exception as e:
+        print(f"Error generating tabular data: {e}")
+        return []
+
+def main(data):
+    try:
+        keywords = defaultdict(list)
+        email_content = defaultdict(list)
+        contact_names = defaultdict(str)
+        sentiment_analyses = defaultdict(str)   
+        summary_relationships = defaultdict(str)
+        personalization_scores = defaultdict(int)
+        response_times_by_contact = defaultdict(list)
+        median_response_times = defaultdict(int)
+        monthly_interactions = defaultdict(int)
+        interaction_counts = defaultdict(int)
+        invitation_counts = defaultdict(int)
+        acceptance_counts = defaultdict(int)
+        follow_up_rates = defaultdict(int)
+        user_initiation = defaultdict(bool)
+        last_email_dates = defaultdict(lambda: None)
+        first_email_dates = defaultdict(lambda: None)
+        threads = defaultdict(lambda: defaultdict(list))
+        interactions_each_month = defaultdict(lambda: [0] * 13)
+        response_times = []
+        count = 0
+        
+        for entry in data:
+            process_message(entry, email_content, contact_names, interaction_counts, invitation_counts, acceptance_counts, first_email_dates, last_email_dates)
+
+        for address, emails in email_content.items():
+            # if address == 'contact_support.pzc@de(%)($)lica(%)($)rd.se' or address == 'CollegeBoard@noreply.collegeboard.org' or address == 'support_rk_royal@163.com':
+            count += 1
+            print(f'Processing contact {count} of {len(email_content)}')
+            # sentiment_analysis(sentiment_analyses, summary_relationships, contact, emails)
+            calculate_interaction_frequency(monthly_interactions, interactions_each_month, address, emails)
+            calculate_personalization_score(personalization_scores, address, emails)
+            find_keywords(keywords, address, emails)
+
+            valid_emails = [email for email in emails if parse_date(email['Date']) is not None]
+            sorted_emails = sorted(valid_emails, key=lambda x: parse_date(x['Date']))
+            organize_by_thread(threads, address, sorted_emails)
+            calculate_follow_up_rate(follow_up_rates, address, sorted_emails)
+            user_initiated(user_initiation, address, sorted_emails)
+        
+        calculate_response_times(threads, response_times_by_contact, response_times, median_response_times)
+        
+        output_data = generate_tabular_data(
+            email_content, contact_names, interaction_counts, invitation_counts, acceptance_counts,
+            first_email_dates, last_email_dates, sentiment_analyses, summary_relationships, monthly_interactions,
+            user_initiation, personalization_scores, follow_up_rates, keywords, response_times_by_contact, median_response_times
+        )
+        
+        # pos = len([contact['sentiment_analysis'] for contact in output_data if contact['sentiment_analysis'] == 'positive'])
+        # neutral = len([contact['sentiment_analysis'] for contact in output_data if contact['sentiment_analysis'] == 'neutral'])
+        # neg = len([contact['sentiment_analysis'] for contact in output_data if contact['sentiment_analysis'] == 'negative'])
+
+        # average_response_time = None
+        # if response_times:
+        #     average_response_time = sum(response_times) / len(response_times)
+
+        # result = {
+        #     'meeting_frequency': sum([contact['emails_exchanged'] for contact in output_data]) / len(output_data), TODO
+        #     'initiation_rate': sum([contact['user_initiated'] for contact in output_data]) / len(output_data),
+        #     'number_of_unique_contacts': len(output_data),
+        #     'calendar_utilization': sum([contact['number_of_invitations_received'] for contact in output_data]) / sum([contact['emails_exchanged'] for contact in output_data]), TODO
+        #     'average_email_length': sum([len(contact['emails']) for contact in output_data]) / len(output_data), TODO
+        #     'average_response_time': average_response_time,
+        #     'email_volume': sum([contact['emails_exchanged'] for contact in output_data]),
+        #     'engagement_rate': sum([contact['follow_up_rate'] for contact in output_data]) / len(output_data),
+        #     'sentiment_analysis': sum([1 for contact in output_data if contact['sentiment_analysis'] == 'positive']) / len(output_data), TODO
+        #     'interaction_quality': f"Positive: {pos}, Neutral: {neutral}, Negative: {neg}"
+        # }
+
+        with open('warmy.json', 'w', encoding='utf-8') as json_file:
+            json.dump(output_data, json_file, indent=4)
+
+        # with open('general_data.json', 'w', encoding='utf-8') as json_file:
+        #     json.dump(result, json_file, indent=4)
+
+        print('Data has been written to tabular_data.json')
+        # print('General data has been written to general_data.json')
+
+    except Exception as e:
+        print(f'An error occurred: {e}')
+
+def clean_headers(msg):
+    allowed_headers = ['To', 'From', 'Subject', 'Date']
+    cleaned_msg = {key: msg.get(key) for key in allowed_headers if msg.get(key)}
+    return cleaned_msg
+
+def extract_mbox(input_mbox):
+    processed_messages = []
+    in_mbox = mailbox.mbox(input_mbox)
+    count = 0
+
+    for message in in_mbox:
+        print(f"Processing message: #{count}")
+        count += 1
+        for spam in SPAM:
+            if message['From']:
+                if spam in message['From']:
+                    continue
+        
+        if message.is_multipart():
+            combined_payload = []
+            try:
+                for part in message.walk():
+                    if part.get_content_type() == 'text/plain':
+                        payload = part.get_payload(decode=True).decode('utf-8', errors='replace')
+                        combined_payload.append(payload)
+                
+                combined_payload = '\n'.join(combined_payload)
+                
+                email_dict = {
+                    'From': message.get('From'),
+                    'To': message.get('To'),
+                    'Subject': message.get('Subject'),
+                    'Date': message.get('Date'),
+                    'Body': combined_payload
+                }
+                processed_messages.append(email_dict)
+            except Exception as e:
+                print(f'Error processing message: {e}')
+                continue
+
+        else:
+            if message.get_content_type() != 'text/plain':
+                continue
+            # Single-part messages
+            email_dict = clean_headers(message)
+            email_dict['Body'] = message.get_payload(decode=True).decode('utf-8', errors='replace')
+            processed_messages.append(email_dict)
+
+    return processed_messages
 
 @app.route('/')
 def index():
     return render_template('index.html')
 
-@app.route('/process_emails', methods=['POST'])
-def process_emails():
-    if not os.path.exists(app.config['UPLOAD_FOLDER']):
-        os.makedirs(app.config['UPLOAD_FOLDER'])
-    if not os.path.exists(app.config['STATIC_FOLDER']):
-        os.makedirs(app.config['STATIC_FOLDER'])
+@app.route('/analyze', methods=['POST'])
+def analyze():
+    app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+    app.config['STATIC_FOLDER'] = STATIC_FOLDER
 
-    if 'mbox_file' not in request.files:
-        return jsonify({'error': 'No file part'}), 400
+    upload_folder = app.config['UPLOAD_FOLDER']
+    static_folder = app.config['STATIC_FOLDER']
+    
+    os.makedirs(upload_folder, exist_ok=True)
+    os.makedirs(static_folder, exist_ok=True)
 
     file = request.files['mbox_file']
-    if file.filename == '':
-        return jsonify({'error': 'No selected file'}), 400
 
     if file:
-        file_path = os.path.join(app.config['UPLOAD_FOLDER'], 'dev.mbox')
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], 'tmp.mbox')
         file.save(file_path)
 
-        try:
-            mbox = mailbox.mbox(file_path)
-
-            email_groups = defaultdict(list)
-            interaction_counts = defaultdict(int)
-            invitation_counts = defaultdict(int)
-            first_email_dates = defaultdict(lambda: None)
-            last_email_dates = defaultdict(lambda: None)
-            sentiment_analyses = defaultdict(str)
-            summary_relationships = defaultdict(str)
-
-            for message in mbox:
-                process_message(message, email_groups, interaction_counts, invitation_counts, first_email_dates, last_email_dates)
-
-            for contact, emails in email_groups.items():
-                feed = " ".join([email['Body'] for email in emails])
-                sentiment_analysis = groq_sentiment_analysis(feed)
-                sentiment_analyses[contact] = sentiment_analysis
-                summary_relationship = groq_summary_relationship(feed)
-                summary_relationships[contact] = summary_relationship
-
-            output_data = prepare_output(email_groups, interaction_counts, invitation_counts, first_email_dates, last_email_dates, sentiment_analyses, summary_relationships)
-
-            with open('email_data.json', 'w') as json_file:
-                json.dump(output_data, json_file, indent=4)
-
-            # Call the visualization function
-            visualize_data()
-
-            return jsonify({'success': True})
-
-        except Exception as e:
-            return jsonify({'error': str(e)}), 500
-
-@app.route('/static/<path:filename>')
-def serve_static(filename):
-    return send_from_directory(app.config['STATIC_FOLDER'], filename)
+    data = extract_mbox(file_path)
+    
+    try:
+        main(data)
+    except Exception as e:
+        print(f'An error occurred: {e}')
+        return jsonify({'error': 'An error occurred during analysis. Please try again.'})
 
 if __name__ == '__main__':
-    if not os.path.exists(app.config['UPLOAD_FOLDER']):
-        os.makedirs(app.config['UPLOAD_FOLDER'])
-    if not os.path.exists(app.config['STATIC_FOLDER']):
-        os.makedirs(app.config['STATIC_FOLDER'])
-    app.run(debug=True, port=8001)
+    app.run(debug=True)
+
+# emails displayed in chronological order, fix user_initiated, BERT sentiment analysis, handle missing values, input for owner email

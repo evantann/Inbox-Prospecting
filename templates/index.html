@@ -7,7 +7,7 @@
 </head>
 <body>
     <h1>Welcome to the Email Analysis Tool</h1>
-    <form id="uploadForm" action="/process_emails" method="post" enctype="multipart/form-data">
+    <form id="uploadForm" method="post" enctype="multipart/form-data">
         <label for="mbox_file">Upload your .mbox file:</label>
         <input type="file" id="mbox_file" name="mbox_file" required>
         <button type="submit">Process Emails</button>
@@ -28,7 +28,7 @@
             event.preventDefault();
             const formData = new FormData(this);
 
-            fetch('/process_emails', {
+            fetch('/analyze', {
                 method: 'POST',
                 body: formData
             })
