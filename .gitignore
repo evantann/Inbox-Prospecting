@@ -14,6 +14,6 @@ tabular_data.json
 
 cleaned_mbox.json
 
-/txt/
+mbox_extract.json
 
-email_content.json
+/txt/

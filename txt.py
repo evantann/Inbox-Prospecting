@@ -31,7 +31,7 @@ def process_mbox(input_mbox):
                         
                         # Separate different parts of the same email
                         f.write("\n" + "="*50 + "Part" + "="*50 + "\n")
-            f.write("\n" + "="*50 + "Message" + "="*50 + "\n")
+                f.write("\n" + "="*50 + "Message" + "="*50 + "\n")
 
     print("Processed mbox file saved to email.txt")
 
