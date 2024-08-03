@@ -10,11 +10,9 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from groq import Groq
 from datetime import datetime
-from dotenv import load_dotenv
+from textblob import TextBlob
 from collections import defaultdict, Counter
 from flask import Flask, render_template, request, jsonify, send_from_directory
-
-load_dotenv()
 
 app = Flask(__name__)
 matplotlib.use('Agg') # Required for matplotlib to work with Flask
@@ -25,7 +23,7 @@ UPLOAD_FOLDER = 'uploads/'
 STATIC_FOLDER = 'static/'
 
 SPAM = {"jobs-listings@linkedin.com", "info@email.meetup.com", "team@mail.notion.so", "no-reply@messages.doordash.com", "updates-noreply@linkedin.com", "team@hiwellfound.com", "Starbucks@e.starbucks.com", "email@washingtonpost.com", "messages-noreply@linkedin.com", "rewards@e.starbucks.com", "info@meetup.com", "college@coll.herffjones.com", "venmo@email.venmo.com", "aws-marketing-email-replies@amazon.com", "chen.li@rexpandjob.com", "invitations@linkedin.com", "members@respond.kp.org", "no-reply@doordash.com", "bankofamerica@emcom.bankofamerica.com", "learn@itr.mail.codecademy.com", "noreply@alliance-mail.oa-bsa.org", "solatwestvillage@emailrelay.com", "alexanderqluong@gmail.com", "no-reply@modernmsg.com"}
-INVITATION_KEYWORDS = INVITATION_KEYWORDS = {
+INVITATION_KEYWORDS = {
     'invite', 'invites', 'invited', 'inviting', 'invitation', 'introduce', 'introduction', 'RSVP', 'like to meet', 'attend', 'event', 'participate'
 }
 ACCEPTANCE_KEYWORDS = {
@@ -45,10 +43,6 @@ STOP_WORDS = {'i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you'
     'january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december',
     '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', 'am', 'pm'
 }
-
-client = Groq(
-    api_key = os.getenv("GROQ_API_KEY"),
-)
 
 def parse_date(date_string):
     date_string = re.sub(r'\s\([A-Z]{2,}\)$', '', date_string)
@@ -85,82 +79,20 @@ def is_acceptance(subject, body):
         print(f"Error in is_acceptance: {e}")
         return False
 
-def groq_general_sentiment(feed):
-    try:
-        chat_completion = client.chat.completions.create(
-            model="llama3-70b-8192",
-            messages=[
-                {
-                    "role": "system",
-                    "content": "you are a sentiment analysis expert"
-                },
-                {
-                    "role": "user",
-                    "content": """
-                        Conduct sentiment analysis on the provided email content.
-                        The analysis must result in a single word indicating the sender's sentiment, chosen exclusively from "positive," "negative," or "neutral."
-                        Please return only the selected word.
-                    """
-                },
-                {
-                    "role": "user",
-                    "content": feed
-                }
-            ],
-            temperature=1,
-            max_tokens=1024,
-            top_p=1,
-            stream=False,
-            stop=None,
-        )
-        
-        sentiment_analysis = chat_completion.choices[0].message.content
-        return sentiment_analysis
-    except Exception as e:
-        print(f"Error in groq_general_sentiment: {e}")
-        return "unknown"
+def sentiment_analysis(sentiment_scores, relationship_summaries, address, emails):
+    sentiment_scores_list = []
 
-def groq_summary_relationship(feed):
     try:
-        chat_completion = client.chat.completions.create(
-            model="llama3-70b-8192",
-            messages=[
-                {
-                    "role": "system",
-                    "content": "you are a sentiment analysis expert"
-                },
-                {
-                    "role": "user",
-                    "content": """
-                        Summarize my relationship with this contact based on provided email content in just one sentence.
-                        Don't start with Here is a summary of your relationship with this contact in one sentence:
-                    """
-                },
-                {
-                    "role": "user",
-                    "content": feed
-                }
-            ],
-            temperature=1,
-            max_tokens=1024,
-            top_p=1,
-            stream=False,
-            stop=None,
-        )
+        for email in emails:
+            blob = TextBlob(email['Body'])
+            polarity = blob.sentiment.polarity
+            sentiment_scores_list.append(polarity)
+        if sentiment_scores_list:
+            sentiment_score = sum(sentiment_scores_list) / len(sentiment_scores_list)
+            sentiment_summary = 'positive' if sentiment_score > 0 else 'negative' if sentiment_score < 0 else 'neutral'
+            sentiment_scores[address] = (sentiment_score)
+            relationship_summaries[address] = sentiment_summary
 
-        summary = chat_completion.choices[0].message.content
-        return summary
-    except Exception as e:
-        print(f"Error in groq_summary_relationship: {e}")
-        return "unknown"
-
-def sentiment_analysis(sentiment_analyses, summary_relationships, address, emails):
-    try:
-        feed = " ".join([email['Body'] for email in emails])
-        sentiment_analysis = groq_general_sentiment(feed)
-        sentiment_analyses[address] = sentiment_analysis
-        summary_relationship = groq_summary_relationship(feed)
-        summary_relationships[address] = summary_relationship
     except Exception as e:
         print(f"Error in sentiment_analysis: {e}")
 
@@ -370,7 +302,7 @@ def process_message(message, email_content, contact_names, interaction_counts, i
     except Exception as e:
         print(f"Error processing message: {e}")
 
-def generate_tabular_data(email_content, contact_names, interaction_counts, invitation_counts, acceptance_counts, first_email_dates, last_email_dates, sentiment_analyses, summary_relationships, monthly_interactions, user_initiation, personalization_scores, follow_up_rates, keywords, response_times_by_contact, median_response_times):
+def generate_tabular_data(email_content, contact_names, interaction_counts, invitation_counts, acceptance_counts, first_email_dates, last_email_dates, sentiment_scores, relationship_summaries, monthly_interactions, user_initiation, personalization_scores, follow_up_rates, keywords, response_times_by_contact, median_response_times):
     try:
         data = [{
             'contact': contact_names.get(contact, 'N/A'),
@@ -380,8 +312,8 @@ def generate_tabular_data(email_content, contact_names, interaction_counts, invi
             'number_of_accepted_invitations': acceptance_counts.get(contact, 0),
             'duration_known (months)': ((last_email_dates.get(contact) - first_email_dates.get(contact)).days) / 30 if first_email_dates.get(contact) and last_email_dates.get(contact) else 'N/A',
             'emails': email_content.get(contact, []),
-            'sentiment_analysis': sentiment_analyses.get(contact, 'N/A'),
-            'summary_relationship': summary_relationships.get(contact, 'N/A'),
+            'sentiment_score': sentiment_scores.get(contact, 0),
+            'relationship_summary': relationship_summaries.get(contact, 'N/A'),
             'user_initiated': user_initiation.get(contact, False),
             'interaction_frequency (emails per month)': monthly_interactions.get(contact, 0),
             'follow_up_rate': follow_up_rates.get(contact, 0),
@@ -400,8 +332,8 @@ def main(data):
         keywords = defaultdict(list)
         email_content = defaultdict(list)
         contact_names = defaultdict(str)
-        sentiment_analyses = defaultdict(str)   
-        summary_relationships = defaultdict(str)
+        sentiment_scores = defaultdict(str)   
+        relationship_summaries = defaultdict(str)
         personalization_scores = defaultdict(int)
         response_times_by_contact = defaultdict(list)
         median_response_times = defaultdict(int)
@@ -425,7 +357,7 @@ def main(data):
             # if address == 'contact_support.pzc@de(%)($)lica(%)($)rd.se' or address == 'CollegeBoard@noreply.collegeboard.org' or address == 'support_rk_royal@163.com':
             count += 1
             print(f'Processing contact {count} of {len(email_content)}')
-            # sentiment_analysis(sentiment_analyses, summary_relationships, contact, emails)
+            sentiment_analysis(sentiment_scores, relationship_summaries, address, emails)
             calculate_interaction_frequency(monthly_interactions, interactions_each_month, address, emails)
             calculate_personalization_score(personalization_scores, address, emails)
             find_keywords(keywords, address, emails)
@@ -440,7 +372,7 @@ def main(data):
         
         output_data = generate_tabular_data(
             email_content, contact_names, interaction_counts, invitation_counts, acceptance_counts,
-            first_email_dates, last_email_dates, sentiment_analyses, summary_relationships, monthly_interactions,
+            first_email_dates, last_email_dates, sentiment_scores, relationship_summaries, monthly_interactions,
             user_initiation, personalization_scores, follow_up_rates, keywords, response_times_by_contact, median_response_times
         )
         
@@ -471,7 +403,7 @@ def main(data):
         # with open('general_data.json', 'w', encoding='utf-8') as json_file:
         #     json.dump(result, json_file, indent=4)
 
-        print('Data has been written to tabular_data.json')
+        print('Data has been written to warmy.json')
         # print('General data has been written to general_data.json')
 
     except Exception as e:
@@ -490,10 +422,10 @@ def extract_mbox(input_mbox):
     for message in in_mbox:
         print(f"Processing message: #{count}")
         count += 1
-        for spam in SPAM:
-            if message['From']:
-                if spam in message['From']:
-                    continue
+        from_address = message.get('From', '')
+        if from_address:
+            if any(spam in from_address for spam in SPAM):
+                continue
         
         if message.is_multipart():
             combined_payload = []
