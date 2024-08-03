@@ -3,56 +3,186 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Email Analysis</title>
+    <title>Inbox Analysis</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+
+        h1, h2 {
+            color: #333;
+        }
+
+        h1 {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        form {
+            display: block;
+            width: 300px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        input[type="email"],
+        input[type="file"] {
+            width: calc(100% - 20px);
+            box-sizing: border-box;
+            margin-bottom: 16px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            border: none;
+            background: #007bff;
+            color: #fff;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        #loading {
+            text-align: center;
+            font-size: 18px;
+            color: #555;
+        }
+
+        #summary {
+            width: 80%;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        #summary p {
+            margin: 10px 0;
+        }
+
+        #plots, #dataframe {
+            width: 90%;
+            max-width: 90vw; /* Ensure it does not exceed 80% of the viewport width */
+            margin: 20px auto;
+            padding: 20px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        #plots img {
+            display: block;
+            width: 100%;
+            max-height: 300px;
+            object-fit: contain;
+            margin-bottom: 10px;
+        }
+
+        #dataframe iframe {
+            width: 100%;
+            height: 500px;
+            border: none;
+        }
+    </style>
 </head>
 <body>
-    <h1>Welcome to the Email Analysis Tool</h1>
-    <form id="uploadForm" method="post" enctype="multipart/form-data">
+    <h1>Welcome to the Inbox Analysis Tool</h1>
+    <form id="uploadForm" enctype="multipart/form-data">
+        <label for="email">Enter your email address:</label>
+        <input type="email" id="email" name="email" required>
+        
         <label for="mbox_file">Upload your .mbox file:</label>
         <input type="file" id="mbox_file" name="mbox_file" required>
+        
         <button type="submit">Process Emails</button>
     </form>
 
+    <div id="loading" style="display: none;">
+        <p>Processing your file...</p>
+    </div>
+
+    <div id="summary">
+        <h2>Summary</h2>
+        <p>Number of initiations: <span id="num_initiations"></span></p>
+        <p>Total number of emails exchanged: <span id="num_emails"></span></p>
+        <p>Average number of emails sent per month: <span id="avg_emails_per_month"></span></p>
+        <p>Average response time (hours): <span id="avg_response_time"></span></p>
+        <p>Average sentiment score: <span id="avg_sentiment_score"></span></p>
+        <p>Average personalization score: <span id="avg_personalization_score"></span></p>
+    </div>
+
     <div id="plots">
-        <!-- Plot images will be displayed here after processing -->
-        <h2>Generated Plots</h2>
-        <img id="number_of_interactions">
-        <img id="email_rate_distribution">
-        <img id="sentiment_analysis_pie_chart">
-        <img id="number_of_invitations">
-        <img id="email_rate_vs_interactions">
+        <h2>Dashboard</h2>
+        <img id="histogram_response_times">
+        <img id="histogram_personalization_scores">
+        <img id="pie_chart_sentiment_analysis">
+    </div>
+
+    <div id="dataframe">
+        <h2>Table</h2>
+        <iframe src="" title="Dataframe"></iframe>
     </div>
 
     <script>
-        document.getElementById('uploadForm').addEventListener('submit', function(event) {
+        document.getElementById('uploadForm').addEventListener('submit', async function(event) {
             event.preventDefault();
             const formData = new FormData(this);
 
-            fetch('/analyze', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.error) {
-                    alert('Error processing emails: ' + data.error);
-                } else {
-                    document.getElementById('number_of_interactions').src = '/static/number_of_interactions.png'
-                    document.getElementById('email_rate_distribution').src = '/static/email_rate_distribution.png'
-                    document.getElementById('sentiment_analysis_pie_chart').src = '/static/sentiment_analysis_pie_chart.png'
-                    document.getElementById('number_of_invitations').src = '/static/number_of_invitations.png'
-                    document.getElementById('email_rate_vs_interactions').src = '/static/email_rate_vs_interactions.png'
+            document.getElementById('loading').style.display = 'block';
 
-                    document.getElementById('number_of_interactions').style.display = 'block';
-                    document.getElementById('email_rate_distribution').style.display = 'block';
-                    document.getElementById('sentiment_analysis_pie_chart').style.display = 'block';
-                    document.getElementById('number_of_invitations').style.display = 'block';
-                    document.getElementById('email_rate_vs_interactions').style.display = 'block';
+            try {
+                const request = await fetch('/analyze', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const response = await request.json();
+                
+                if (response.error) { 
+                    alert('Error processing emails: ' + response.error);
+                } else {
+                    document.getElementById('loading').style.display = 'none';
+
+                    document.getElementById('num_initiations').textContent = response.num_initiations;
+                    document.getElementById('num_emails').textContent = response.total_emails_exchanged;
+                    document.getElementById('avg_emails_per_month').textContent = response.avg_emails_per_month;
+                    document.getElementById('avg_response_time').textContent = response.avg_response_time;
+                    document.getElementById('avg_sentiment_score').textContent = response.avg_sentiment_score;
+                    document.getElementById('avg_personalization_score').textContent = response.avg_personalization_score;
+
+                    document.getElementById('histogram_response_times').src = '/static/histogram_response_times.png';
+                    document.getElementById('histogram_personalization_scores').src = '/static/histogram_personalization_scores.png';
+                    document.getElementById('pie_chart_sentiment_analysis').src = '/static/pie_chart_sentiment_analysis.png';
+
+                    document.querySelector('#dataframe iframe').src = '/static/dataframe.html';
                 }
-            })
-            .catch(error => {
+            } catch (error) {
                 alert('Error: ' + error.message);
-            });
+            }
         });
     </script>
 </body>
