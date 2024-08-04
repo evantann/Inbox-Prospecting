@@ -414,7 +414,7 @@ def extract_mbox(input_mbox):
     count = 0
 
     for message in in_mbox:
-        print(f"Processing message: #{count}")
+        print(f"Extracting message #{count}")
         count += 1
         from_address = message.get('From', '')
         if from_address:
@@ -513,10 +513,10 @@ def generate_summary(data):
         return {
             'num_initiations': num_contacts_user_initiated_true,
             'total_emails_exchanged': total_emails_exchanged,
-            'avg_emails_per_month': round(average_emails_per_month, 2),
-            'avg_response_time': round(average_response_time, 2),
-            'avg_sentiment_score': round(average_sentiment_score, 2),
-            'avg_personalization_score': round(average_personalization_score, 2)
+            'avg_emails_per_month': round(average_emails_per_month, 2) if not np.isnan(average_emails_per_month) else 0,
+            'avg_response_time': round(average_response_time, 2) if not np.isnan(average_response_time) else 0,
+            'avg_sentiment_score': round(average_sentiment_score, 2) if not np.isnan(average_sentiment_score) else 0,
+            'avg_personalization_score': round(average_personalization_score, 2) if not np.isnan(average_personalization_score) else 0
         }
 
     except Exception as e:
