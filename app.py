@@ -405,7 +405,7 @@ def main(data, user_email):
 
 def clean_headers(msg):
     allowed_headers = ['To', 'From', 'Subject', 'Date']
-    cleaned_msg = {key: msg.get(key) for key in allowed_headers if msg.get(key)}
+    cleaned_msg = {key: str(msg.get(key)) for key in allowed_headers if msg.get(key)}
     return cleaned_msg
 
 def extract_mbox(input_mbox):
@@ -432,11 +432,11 @@ def extract_mbox(input_mbox):
                 combined_payload = '\n'.join(combined_payload)
                 
                 email_dict = {
-                    'From': message.get('From'),
-                    'To': message.get('To'),
-                    'Subject': message.get('Subject'),
-                    'Date': message.get('Date'),
-                    'Body': combined_payload
+                    'From': str(message.get('From')),
+                    'To': str(message.get('To')),
+                    'Subject': str(message.get('Subject')),
+                    'Date': str(message.get('Date')),
+                    'Body': str(combined_payload)
                 }
                 processed_messages.append(email_dict)
             except Exception as e:
@@ -448,7 +448,7 @@ def extract_mbox(input_mbox):
                 continue
 
             email_dict = clean_headers(message)
-            email_dict['Body'] = message.get_payload(decode=True).decode('utf-8', errors='replace')
+            email_dict['Body'] = str(message.get_payload(decode=True).decode('utf-8', errors='replace'))
             processed_messages.append(email_dict)
 
     return processed_messages
