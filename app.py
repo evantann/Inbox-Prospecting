@@ -346,7 +346,7 @@ def main(data, user_email):
         response_times = []
         count = 0
         
-        for entry in data:
+        for entry in data: 
             process_message(entry, email_content, contact_names, interaction_counts, invitation_counts, acceptance_counts, first_email_dates, last_email_dates, user_email)
 
         for address, emails in email_content.items():
@@ -436,8 +436,9 @@ def extract_mbox(input_mbox):
                     'To': str(message.get('To')),
                     'Subject': str(message.get('Subject')),
                     'Date': str(message.get('Date')),
-                    'Body': str(combined_payload)
+                    'Body': combined_payload
                 }
+
                 processed_messages.append(email_dict)
             except Exception as e:
                 print(f'Error processing message: {e}')
@@ -448,7 +449,10 @@ def extract_mbox(input_mbox):
                 continue
 
             email_dict = clean_headers(message)
-            email_dict['Body'] = str(message.get_payload(decode=True).decode('utf-8', errors='replace'))
+            email_dict['Body'] = message.get_payload(decode=True).decode('utf-8', errors='replace')
+            with open('email.txt', 'a') as file:
+                file.write(email_dict['Body'])
+                file.write('=' * 100)
             processed_messages.append(email_dict)
 
     return processed_messages
