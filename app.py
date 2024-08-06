@@ -369,7 +369,7 @@ def main(data, user_email):
         return output_data
 
     except Exception as e:
-        print(f'An error occurred: {e}')
+        print(f'An error occurred in main(): {e}')
 
 def clean_headers(msg):
     try:
@@ -388,7 +388,7 @@ def extract_mbox(input_mbox):
         for message in in_mbox:
             print(f"Extracting message #{count}")
             count += 1
-            from_address = message.get('From', '')
+            from_address = str(message.get('From', ''))
             if from_address:
                 if any(spam in from_address for spam in SPAM):
                     continue
@@ -399,7 +399,7 @@ def extract_mbox(input_mbox):
                     for part in message.walk():
                         if part.get_content_type() == 'text/plain':
                             payload = part.get_payload(decode=True).decode('utf-8', errors='replace')
-                            combined_payload.append(payload)
+                            combined_payload.append(str(payload))
                     
                     combined_payload = '\n'.join(combined_payload)
                     
@@ -422,7 +422,7 @@ def extract_mbox(input_mbox):
                     continue
 
                 email_dict = clean_headers(message)
-                email_dict['Body'] = message.get_payload(decode=True).decode('utf-8', errors='replace')
+                email_dict['Body'] = str(message.get_payload(decode=True).decode('utf-8', errors='replace'))
                 processed_messages.append(email_dict)
 
         return processed_messages
@@ -532,7 +532,7 @@ def analyze():
         return jsonify(summary), 200
     
     except Exception as e:
-        print(f'An error occurred: {e}')
+        print(f'An error occurred at the analyze endpoint: {e}')
         return jsonify({'error': 'An error occurred during analysis. Please try again.'}), 500
 
 if __name__ == '__main__':
