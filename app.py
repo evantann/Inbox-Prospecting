@@ -293,18 +293,18 @@ def generate_tabular_data(email_content, contact_names, interaction_counts, invi
         data = [{
             'contact': contact_names.get(contact, 'N/A'),
             'email_address': contact if contact else 'N/A',
-            'emails_exchanged': interaction_counts.get(contact, 'N/A'),
+            'emails_exchanged': interaction_counts.get(contact, 0),
             'number_of_invitations_received': invitation_counts.get(contact, 0),
             # 'number_of_accepted_invitations': acceptance_counts.get(contact, 0),
-            'duration_known (months)': ((last_email_dates.get(contact) - first_email_dates.get(contact)).days) / 30 if first_email_dates.get(contact) and last_email_dates.get(contact) else 'N/A',
+            'duration_known (months)': ((last_email_dates.get(contact) - first_email_dates.get(contact)).days) / 30 if first_email_dates.get(contact) and last_email_dates.get(contact) else 0,
             'emails': email_content.get(contact, 'N/A'),
-            'sentiment_score': sentiment_scores.get(contact, 'N/A'),
+            'sentiment_score': sentiment_scores.get(contact, 0),
             'relationship_summary': relationship_summaries.get(contact, 'N/A'),
-            'user_initiated': user_initiation.get(contact, 'N/A'),
-            'interaction_frequency (emails per month)': monthly_interactions.get(contact, 'N/A'),
-            'follow_up_rate (%)': follow_up_rates.get(contact, 'N/A'),
-            'average_response_time (hours)': response_times_by_contact.get(contact, 'N/A'),
-            'median_response_time (hours)': median_response_times.get(contact, 'N/A'),
+            'user_initiated': user_initiation.get(contact, False    ),
+            'interaction_frequency (emails per month)': monthly_interactions.get(contact, 0),
+            'follow_up_rate (%)': follow_up_rates.get(contact, 0),
+            'average_response_time (hours)': response_times_by_contact.get(contact, 0),
+            'median_response_time (hours)': median_response_times.get(contact, 0),
             'keywords': keywords.get(contact, 'N/A'),
             'personalization_score': personalization_scores.get(contact, 0) / (sum(1 for email in email_content.get(contact, []) if user_email in email['From']) if sum(1 for email in email_content.get(contact, []) if user_email in email['From']) > 0 else 1)
         } for contact in email_content]
@@ -474,9 +474,6 @@ def generate_plots(data):
 def generate_summary(data):
     try:
         df = pd.json_normalize(data)
-        
-        df['average_response_time (hours)'] = pd.to_numeric(df['average_response_time (hours)'], errors='coerce')
-        df['personalization_score'] = pd.to_numeric(df['personalization_score'], errors='coerce')
 
         df_filtered = df.loc[
             (df['average_response_time (hours)'].notna()) &
