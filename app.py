@@ -60,21 +60,19 @@ def parse_date(date_string):
 
 def is_invitation(subject, body):
     try:
-        subject = subject.lower() if subject else ''
-        body = body.lower() if body else ''
+        subject = subject.lower()
+        body = body.lower()
         return any(keyword in subject or keyword in body for keyword in INVITATION_KEYWORDS)
     except Exception as e:
         print(f"Error in is_invitation: {e}")
-        return False
 
 def is_acceptance(subject, body):
     try:
-        subject = subject.lower() if subject else ''
-        body = body.lower() if body else ''
+        subject = subject.lower()
+        body = body.lower()
         return any(keyword in subject or keyword in body for keyword in ACCEPTANCE_KEYWORDS)
     except Exception as e:
         print(f"Error in is_acceptance: {e}")
-        return False
 
 def sentiment_analysis(sentiment_scores, relationship_summaries, address, emails):
     sentiment_scores_list = []
@@ -170,6 +168,8 @@ def calculate_interaction_frequency(monthly_interactions, interactions_each_mont
         print(f"Error in calculating interaction frequency: {e}")
 
 def user_initiated(user_initiation, address, emails, user_email):
+    if not emails:
+        return
     try:
         user_initiation[address] = user_email in emails[0]['From']
     except Exception as e:
@@ -235,7 +235,7 @@ def process_message(message, email_content, contact_names, interaction_counts, i
         if message['Body']:
             body = message['Body']
         else:
-            body = ' '
+            body = ''
 
         if user_email not in from_address: # if the owner is not the sender, add the sender to the contact list
             split_address = from_address.split('<')
@@ -245,19 +245,13 @@ def process_message(message, email_content, contact_names, interaction_counts, i
                 contacts.append(address)
                 if address not in contact_names:
                     contact_names[address] = name
-            else:
-                address = from_address.strip()
-                if address not in contact_names or contact_names[address] is None: # email only format; if not none, name is already known
-                    contact_names[address] = None
-        elif user_email in from_address: # not else because user can be part of a group email and we ignore this case
+        elif user_email in from_address:
             split_to_addresses = to_addresses.split(',')
             if len(split_to_addresses) > 1: # multiple recipients
                 for address in split_to_addresses:
                     if user_email not in address:
                         address = address.strip()
                         contacts.append(address)
-                        if address not in contact_names or contact_names[address] is None: # multiple recipients format does not include names
-                            contact_names[address] = None
             else:
                 split_address = from_address.split('<')
                 if len(split_address) > 1:
@@ -267,10 +261,6 @@ def process_message(message, email_content, contact_names, interaction_counts, i
                         contacts.append(address)
                         if address not in contact_names:
                             contact_names[address] = name
-                else:
-                    address = from_address.strip()
-                    if address not in contact_names or contact_names[address] is None: # email only format; if not none, name is already known
-                        contact_names[address] = None
 
         for address in contacts:
             email_content[address].append({
@@ -303,19 +293,19 @@ def generate_tabular_data(email_content, contact_names, interaction_counts, invi
         data = [{
             'contact': contact_names.get(contact, 'N/A'),
             'email_address': contact if contact else 'N/A',
-            'emails_exchanged': interaction_counts.get(contact, 0),
+            'emails_exchanged': interaction_counts.get(contact, 'N/A'),
             'number_of_invitations_received': invitation_counts.get(contact, 0),
             # 'number_of_accepted_invitations': acceptance_counts.get(contact, 0),
             'duration_known (months)': ((last_email_dates.get(contact) - first_email_dates.get(contact)).days) / 30 if first_email_dates.get(contact) and last_email_dates.get(contact) else 'N/A',
-            'emails': email_content.get(contact, []),
-            'sentiment_score': sentiment_scores.get(contact, 0),
+            'emails': email_content.get(contact, 'N/A'),
+            'sentiment_score': sentiment_scores.get(contact, 'N/A'),
             'relationship_summary': relationship_summaries.get(contact, 'N/A'),
-            'user_initiated': user_initiation.get(contact, False),
-            'interaction_frequency (emails per month)': monthly_interactions.get(contact, 0),
-            'follow_up_rate (%)': follow_up_rates.get(contact, 0),
-            'average_response_time (hours)': response_times_by_contact.get(contact, 0),
-            'median_response_time (hours)': median_response_times.get(contact, 0),
-            'keywords': keywords.get(contact, []),
+            'user_initiated': user_initiation.get(contact, 'N/A'),
+            'interaction_frequency (emails per month)': monthly_interactions.get(contact, 'N/A'),
+            'follow_up_rate (%)': follow_up_rates.get(contact, 'N/A'),
+            'average_response_time (hours)': response_times_by_contact.get(contact, 'N/A'),
+            'median_response_time (hours)': median_response_times.get(contact, 'N/A'),
+            'keywords': keywords.get(contact, 'N/A'),
             'personalization_score': personalization_scores.get(contact, 0) / (sum(1 for email in email_content.get(contact, []) if user_email in email['From']) if sum(1 for email in email_content.get(contact, []) if user_email in email['From']) > 0 else 1)
         } for contact in email_content]
         return data
@@ -350,7 +340,6 @@ def main(data, user_email):
             process_message(entry, email_content, contact_names, interaction_counts, invitation_counts, acceptance_counts, first_email_dates, last_email_dates, user_email)
 
         for address, emails in email_content.items():
-            # if address == 'contact_support.pzc@de(%)($)lica(%)($)rd.se' or address == 'CollegeBoard@noreply.collegeboard.org' or address == 'support_rk_royal@163.com':
             count += 1
             print(f'Processing contact {count} of {len(email_content)}')
             sentiment_analysis(sentiment_scores, relationship_summaries, address, emails)
@@ -358,7 +347,7 @@ def main(data, user_email):
             calculate_personalization_score(personalization_scores, address, emails, user_email)
             find_keywords(keywords, address, emails)
 
-            valid_emails = [email for email in emails if parse_date(email['Date']) is not None]
+            valid_emails = [email for email in emails if parse_date(email['Date'])]
             sorted_emails = sorted(valid_emails, key=lambda x: parse_date(x['Date']))
             organize_by_thread(threads, address, sorted_emails)
             calculate_follow_up_rate(follow_up_rates, address, sorted_emails, user_email)
@@ -371,27 +360,6 @@ def main(data, user_email):
             first_email_dates, last_email_dates, sentiment_scores, relationship_summaries, monthly_interactions,
             user_initiation, personalization_scores, follow_up_rates, keywords, response_times_by_contact, median_response_times, user_email
         )
-        
-        # pos = len([contact['sentiment_analysis'] for contact in output_data if contact['sentiment_analysis'] == 'positive'])
-        # neutral = len([contact['sentiment_analysis'] for contact in output_data if contact['sentiment_analysis'] == 'neutral'])
-        # neg = len([contact['sentiment_analysis'] for contact in output_data if contact['sentiment_analysis'] == 'negative'])
-
-        # average_response_time = None
-        # if response_times:
-        #     average_response_time = sum(response_times) / len(response_times)
-
-        # result = {
-        #     'meeting_frequency': sum([contact['emails_exchanged'] for contact in output_data]) / len(output_data),
-        #     'initiation_rate': sum([contact['user_initiated'] for contact in output_data]) / len(output_data),
-        #     'number_of_unique_contacts': len(output_data),
-        #     'calendar_utilization': sum([contact['number_of_invitations_received'] for contact in output_data]) / sum([contact['emails_exchanged'] for contact in output_data]),
-        #     'average_email_length': sum([len(contact['emails']) for contact in output_data]) / len(output_data),
-        #     'average_response_time': average_response_time,
-        #     'email_volume': sum([contact['emails_exchanged'] for contact in output_data]),
-        #     'engagement_rate': sum([contact['follow_up_rate'] for contact in output_data]) / len(output_data),
-        #     'sentiment_analysis': sum([1 for contact in output_data if contact['sentiment_analysis'] == 'positive']) / len(output_data),
-        #     'interaction_quality': f"Positive: {pos}, Neutral: {neutral}, Negative: {neg}"
-        # }
 
         with open(f'{user_email}.json', 'w', encoding='utf-8') as json_file:
             json.dump(output_data, json_file, indent=4)
@@ -404,58 +372,64 @@ def main(data, user_email):
         print(f'An error occurred: {e}')
 
 def clean_headers(msg):
-    allowed_headers = ['To', 'From', 'Subject', 'Date']
-    cleaned_msg = {key: str(msg.get(key)) for key in allowed_headers if msg.get(key)}
-    return cleaned_msg
+    try:
+        allowed_headers = ['To', 'From', 'Subject', 'Date']
+        cleaned_msg = {key: str(msg.get(key)) for key in allowed_headers if msg.get(key)}
+        return cleaned_msg
+    except Exception as e:
+        print(f'Error cleaning headers: {e}')
 
 def extract_mbox(input_mbox):
-    processed_messages = []
-    in_mbox = mailbox.mbox(input_mbox)
-    count = 0
-
-    for message in in_mbox:
-        print(f"Extracting message #{count}")
-        count += 1
-        from_address = message.get('From', '')
-        if from_address:
-            if any(spam in from_address for spam in SPAM):
-                continue
+    try:
+        processed_messages = []
+        in_mbox = mailbox.mbox(input_mbox)
+        count = 0
         
-        if message.is_multipart():
-            combined_payload = []
-            try:
-                for part in message.walk():
-                    if part.get_content_type() == 'text/plain':
-                        payload = part.get_payload(decode=True).decode('utf-8', errors='replace')
-                        combined_payload.append(payload)
-                
-                combined_payload = '\n'.join(combined_payload)
-                
-                email_dict = {
-                    'From': str(message.get('From')),
-                    'To': str(message.get('To')),
-                    'Subject': str(message.get('Subject')),
-                    'Date': str(message.get('Date')),
-                    'Body': combined_payload
-                }
+        for message in in_mbox:
+            print(f"Extracting message #{count}")
+            count += 1
+            from_address = message.get('From', '')
+            if from_address:
+                if any(spam in from_address for spam in SPAM):
+                    continue
+            
+            if message.is_multipart():
+                combined_payload = []
+                try:
+                    for part in message.walk():
+                        if part.get_content_type() == 'text/plain':
+                            payload = part.get_payload(decode=True).decode('utf-8', errors='replace')
+                            combined_payload.append(payload)
+                    
+                    combined_payload = '\n'.join(combined_payload)
+                    
+                    email_dict = {
+                        'From': str(message.get('From')),
+                        'To': str(message.get('To')),
+                        'Subject': str(message.get('Subject')),
+                        'Date': str(message.get('Date')),
+                        'Body': combined_payload
+                    }
 
+                    processed_messages.append(email_dict)
+
+                except Exception as e:
+                    print(f'Error processing message: {e}')
+                    continue
+
+            else:
+                if message.get_content_type() != 'text/plain':
+                    continue
+
+                email_dict = clean_headers(message)
+                email_dict['Body'] = message.get_payload(decode=True).decode('utf-8', errors='replace')
                 processed_messages.append(email_dict)
-            except Exception as e:
-                print(f'Error processing message: {e}')
-                continue
 
-        else:
-            if message.get_content_type() != 'text/plain':
-                continue
+        return processed_messages
+    
+    except Exception as e:
+        print(f'Error extracting mbox: {e}')
 
-            email_dict = clean_headers(message)
-            email_dict['Body'] = message.get_payload(decode=True).decode('utf-8', errors='replace')
-            with open('email.txt', 'a') as file:
-                file.write(email_dict['Body'])
-                file.write('=' * 100)
-            processed_messages.append(email_dict)
-
-    return processed_messages
 
 def generate_plots(data):
     try:
@@ -501,8 +475,12 @@ def generate_summary(data):
     try:
         df = pd.json_normalize(data)
         
-        # Filter out zero values for average_response_time and personalization_score
+        df['average_response_time (hours)'] = pd.to_numeric(df['average_response_time (hours)'], errors='coerce')
+        df['personalization_score'] = pd.to_numeric(df['personalization_score'], errors='coerce')
+
         df_filtered = df.loc[
+            (df['average_response_time (hours)'].notna()) &
+            (df['personalization_score'].notna()) &
             (df['average_response_time (hours)'] > 0) &
             (df['personalization_score'] > 0)
         ]
@@ -517,10 +495,10 @@ def generate_summary(data):
         return {
             'num_initiations': num_contacts_user_initiated_true,
             'total_emails_exchanged': total_emails_exchanged,
-            'avg_emails_per_month': round(average_emails_per_month, 2) if not np.isnan(average_emails_per_month) else 0,
-            'avg_response_time': round(average_response_time, 2) if not np.isnan(average_response_time) else 0,
-            'avg_sentiment_score': round(average_sentiment_score, 2) if not np.isnan(average_sentiment_score) else 0,
-            'avg_personalization_score': round(average_personalization_score, 2) if not np.isnan(average_personalization_score) else 0
+            'avg_emails_per_month': round(average_emails_per_month, 2) if not np.isnan(average_emails_per_month) else None,
+            'avg_response_time': round(average_response_time, 2) if not np.isnan(average_response_time) else None,
+            'avg_sentiment_score': round(average_sentiment_score, 2) if not np.isnan(average_sentiment_score) else None,
+            'avg_personalization_score': round(average_personalization_score, 2) if not np.isnan(average_personalization_score) else None
         }
 
     except Exception as e:
