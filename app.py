@@ -253,7 +253,7 @@ def process_message(message, email_content, contact_names, interaction_counts, i
                         address = address.strip()
                         contacts.append(address)
             else:
-                split_address = from_address.split('<')
+                split_address = to_addresses.split('<')
                 if len(split_address) > 1:
                     name = split_address[0].strip()
                     address = split_address[1].replace('>', '').strip()
