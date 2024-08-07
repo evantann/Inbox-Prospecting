@@ -175,9 +175,8 @@ def user_initiated(user_initiation, address, emails, user_email):
     except Exception as e:
         print(f"Error in determining user initiation: {e}")
 
-def calculate_personalization_score(personalization_scores, address, emails, user_email):
+def calculate_personalization_score(nlp, personalization_scores, address, emails, user_email):
     try:
-        nlp = spacy.load("en_core_web_sm")
         for email in emails:
             if user_email in email['From']:
                 doc = nlp(email['Body'])
@@ -313,7 +312,7 @@ def generate_tabular_data(email_content, contact_names, interaction_counts, invi
         print(f"Error generating tabular data: {e}")
         return []
 
-def main(data, user_email):
+def main(data, user_email, nlp):
     try:
         keywords = defaultdict(list)
         email_content = defaultdict(list)
@@ -344,7 +343,7 @@ def main(data, user_email):
             print(f'Processing contact {count} of {len(email_content)}')
             sentiment_analysis(sentiment_scores, relationship_summaries, address, emails)
             calculate_interaction_frequency(monthly_interactions, interactions_each_month, address, emails)
-            calculate_personalization_score(personalization_scores, address, emails, user_email)
+            calculate_personalization_score(nlp, personalization_scores, address, emails, user_email)
             find_keywords(keywords, address, emails)
 
             valid_emails = [email for email in emails if parse_date(email['Date'])]
@@ -379,53 +378,65 @@ def clean_headers(msg):
     except Exception as e:
         print(f'Error cleaning headers: {e}')
 
-def extract_mbox(input_mbox):
+def extract_mbox(input_mbox, user_email, nlp):
     try:
         processed_messages = []
         in_mbox = mailbox.mbox(input_mbox)
         count = 0
+        filtered = 0
         
-        for message in in_mbox:
-            print(f"Extracting message #{count}")
-            count += 1
-            from_address = str(message.get('From', ''))
-            if from_address:
-                if any(spam in from_address for spam in SPAM):
-                    continue
-            
-            if message.is_multipart():
-                combined_payload = []
-                try:
-                    for part in message.walk():
-                        if part.get_content_type() == 'text/plain':
-                            payload = part.get_payload(decode=True).decode('utf-8', errors='replace')
-                            combined_payload.append(str(payload))
-                    
-                    combined_payload = '\n'.join(combined_payload)
-                    
-                    email_dict = {
-                        'From': str(message.get('From')),
-                        'To': str(message.get('To')),
-                        'Subject': str(message.get('Subject')),
-                        'Date': str(message.get('Date')),
-                        'Body': combined_payload
-                    }
+        with open('filter.txt', 'w') as file:
+            for message in in_mbox:
+                print(f"Extracting message #{count}")
+                count += 1
+                from_address = str(message.get('From', ''))
+                if from_address:
+                    if any(spam in from_address for spam in SPAM):
+                        filtered += 1
+                        continue
+                
+                from_address = str(message.get('From', ''))
+                if user_email not in from_address:
+                    doc = nlp(from_address)
+                    for ent in doc.ents:
+                        if ent.label_ == 'ORG':
+                            file.write(f'{from_address}, {ent.text}\n')
+                            filtered += 1
+                            continue
+                
+                if message.is_multipart():
+                    combined_payload = []
+                    try:
+                        for part in message.walk():
+                            if part.get_content_type() == 'text/plain':
+                                payload = part.get_payload(decode=True).decode('utf-8', errors='replace')
+                                combined_payload.append(str(payload))
+                        
+                        combined_payload = '\n'.join(combined_payload)
+                        
+                        email_dict = {
+                            'From': str(message.get('From')),
+                            'To': str(message.get('To')),
+                            'Subject': str(message.get('Subject')),
+                            'Date': str(message.get('Date')),
+                            'Body': combined_payload
+                        }
 
+                        processed_messages.append(email_dict)
+
+                    except Exception as e:
+                        print(f'Error processing message: {e}')
+                        continue
+
+                else:
+                    if message.get_content_type() != 'text/plain':
+                        continue
+
+                    email_dict = clean_headers(message)
+                    email_dict['Body'] = str(message.get_payload(decode=True).decode('utf-8', errors='replace'))
                     processed_messages.append(email_dict)
 
-                except Exception as e:
-                    print(f'Error processing message: {e}')
-                    continue
-
-            else:
-                if message.get_content_type() != 'text/plain':
-                    continue
-
-                email_dict = clean_headers(message)
-                email_dict['Body'] = str(message.get_payload(decode=True).decode('utf-8', errors='replace'))
-                processed_messages.append(email_dict)
-
-        return processed_messages
+            return processed_messages
     
     except Exception as e:
         print(f'Error extracting mbox: {e}')
@@ -435,9 +446,14 @@ def generate_plots(data):
     try:
         df = pd.DataFrame(data)
 
+        df_filtered = df.loc[
+            (df['average_response_time (hours)'] > 0) &
+            (df['personalization_score'] > 0)
+        ]
+
         # 1. Histogram of Average Response Times
         plt.figure(figsize=(12, 6))
-        sns.histplot(df['average_response_time (hours)'], bins=100, kde=True, color='blue')
+        sns.histplot(df_filtered['average_response_time (hours)'], bins=10, kde=True, color='blue')
         plt.title('Histogram of Average Response Times')
         plt.xlabel('Average Response Time (hours)')
         plt.ylabel('Frequency')
@@ -447,7 +463,7 @@ def generate_plots(data):
 
         # 2. Histogram of Personalization Scores
         plt.figure(figsize=(12, 6))
-        sns.histplot(df['personalization_score'], bins=100, kde=True, color='green')
+        sns.histplot(df_filtered['personalization_score'], bins=10, kde=True, color='green')
         plt.title('Histogram of Personalization Scores')
         plt.xlabel('Personalization Score')
         plt.ylabel('Frequency')
@@ -476,8 +492,6 @@ def generate_summary(data):
         df = pd.json_normalize(data)
 
         df_filtered = df.loc[
-            (df['average_response_time (hours)'].notna()) &
-            (df['personalization_score'].notna()) &
             (df['average_response_time (hours)'] > 0) &
             (df['personalization_score'] > 0)
         ]
@@ -523,10 +537,11 @@ def analyze():
         file_path = os.path.join(app.config['UPLOAD_FOLDER'], f'{user_email}.mbox')
         file.save(file_path)
 
-    data = extract_mbox(file_path)
+    nlp = spacy.load("en_core_web_sm")
+    data = extract_mbox(file_path, user_email, nlp)
     
     try:
-        obj = main(data, user_email)
+        obj = main(data, user_email, nlp)
         generate_plots(obj)
         summary = generate_summary(obj)
         return jsonify(summary), 200
