@@ -2,16 +2,19 @@ import os
 import re
 import json
 import spacy
+import torch
 import mailbox
 import matplotlib
 import numpy as np
 import pandas as pd
 import seaborn as sns
+import torch.nn.functional as F
 import matplotlib.pyplot as plt
 from datetime import datetime
 from textblob import TextBlob
 from collections import defaultdict, Counter
 from flask import Flask, render_template, request, jsonify
+from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
 app = Flask(__name__)
 matplotlib.use('Agg') # Required for matplotlib to work with Flask
@@ -19,12 +22,8 @@ matplotlib.use('Agg') # Required for matplotlib to work with Flask
 UPLOAD_FOLDER = 'uploads/'
 STATIC_FOLDER = 'static/'
 
-SPAM = {"jobs-listings@linkedin.com", "info@email.meetup.com", "team@mail.notion.so", "no-reply@messages.doordash.com", "updates-noreply@linkedin.com", "team@hiwellfound.com", "Starbucks@e.starbucks.com", "email@washingtonpost.com", "messages-noreply@linkedin.com", "rewards@e.starbucks.com", "info@meetup.com", "college@coll.herffjones.com", "venmo@email.venmo.com", "aws-marketing-email-replies@amazon.com", "chen.li@rexpandjob.com", "invitations@linkedin.com", "members@respond.kp.org", "no-reply@doordash.com", "bankofamerica@emcom.bankofamerica.com", "learn@itr.mail.codecademy.com", "noreply@alliance-mail.oa-bsa.org", "solatwestvillage@emailrelay.com", "alexanderqluong@gmail.com", "no-reply@modernmsg.com"}
 INVITATION_KEYWORDS = {
     'invite', 'invites', 'invited', 'inviting', 'invitation', 'introduce', 'introduction', 'RSVP', 'like to meet', 'attend', 'event', 'participate'
-}
-ACCEPTANCE_KEYWORDS = {
-    'accept', 'will attend'
 }
 STOP_WORDS = {'i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you', 'your', 'yours', 'yourself', 'yourselves',
     'he', 'him', 'his', 'himself', 'she', 'her', 'hers', 'herself', 'it', 'its', 'itself', 'they', 'them', 'their',
@@ -65,14 +64,6 @@ def is_invitation(subject, body):
         return any(keyword in subject or keyword in body for keyword in INVITATION_KEYWORDS)
     except Exception as e:
         print(f"Error in is_invitation: {e}")
-
-def is_acceptance(subject, body):
-    try:
-        subject = subject.lower()
-        body = body.lower()
-        return any(keyword in subject or keyword in body for keyword in ACCEPTANCE_KEYWORDS)
-    except Exception as e:
-        print(f"Error in is_acceptance: {e}")
 
 def sentiment_analysis(sentiment_scores, relationship_summaries, address, emails):
     sentiment_scores_list = []
@@ -205,7 +196,7 @@ def find_keywords(keywords, address, emails):
     except Exception as e:
         print(f"Error in finding keywords: {e}")
 
-def process_message(message, email_content, contact_names, interaction_counts, invitation_counts, acceptance_counts, first_email_dates, last_email_dates, user_email):
+def process_message(message, email_content, contact_names, interaction_counts, invitation_counts, first_email_dates, last_email_dates, user_email):
     try:
         contacts = []
 
@@ -274,9 +265,6 @@ def process_message(message, email_content, contact_names, interaction_counts, i
 
             if address in from_address and is_invitation(subject, body):
                 invitation_counts[address] += 1
-            
-            # if user_email in from_address and is_acceptance(subject, body):
-            #     acceptance_counts[address] += 1
 
             if date:
                 if first_email_dates[address] is None or date < first_email_dates[address]:
@@ -287,14 +275,13 @@ def process_message(message, email_content, contact_names, interaction_counts, i
     except Exception as e:
         print(f"Error processing message: {e}")
 
-def generate_tabular_data(email_content, contact_names, interaction_counts, invitation_counts, acceptance_counts, first_email_dates, last_email_dates, sentiment_scores, relationship_summaries, monthly_interactions, user_initiation, personalization_scores, follow_up_rates, keywords, response_times_by_contact, median_response_times, user_email):
+def generate_tabular_data(email_content, contact_names, interaction_counts, invitation_counts, first_email_dates, last_email_dates, sentiment_scores, relationship_summaries, monthly_interactions, user_initiation, personalization_scores, follow_up_rates, keywords, response_times_by_contact, median_response_times, user_email):
     try:
         data = [{
             'contact': contact_names.get(contact, 'N/A'),
             'email_address': contact if contact else 'N/A',
             'emails_exchanged': interaction_counts.get(contact, 0),
             'number_of_invitations_received': invitation_counts.get(contact, 0),
-            # 'number_of_accepted_invitations': acceptance_counts.get(contact, 0),
             'duration_known (months)': ((last_email_dates.get(contact) - first_email_dates.get(contact)).days) / 30 if first_email_dates.get(contact) and last_email_dates.get(contact) else 0,
             'emails': email_content.get(contact, 'N/A'),
             'sentiment_score': sentiment_scores.get(contact, 0),
@@ -325,7 +312,6 @@ def main(data, user_email, nlp):
         monthly_interactions = defaultdict(int)
         interaction_counts = defaultdict(int)
         invitation_counts = defaultdict(int)
-        acceptance_counts = defaultdict(int)
         follow_up_rates = defaultdict(int)
         user_initiation = defaultdict(bool)
         last_email_dates = defaultdict(lambda: None)
@@ -336,7 +322,7 @@ def main(data, user_email, nlp):
         count = 0
         
         for entry in data: 
-            process_message(entry, email_content, contact_names, interaction_counts, invitation_counts, acceptance_counts, first_email_dates, last_email_dates, user_email)
+            process_message(entry, email_content, contact_names, interaction_counts, invitation_counts, first_email_dates, last_email_dates, user_email)
 
         for address, emails in email_content.items():
             count += 1
@@ -355,7 +341,7 @@ def main(data, user_email, nlp):
         calculate_response_times(threads, response_times_by_contact, response_times, median_response_times, user_email)
         
         output_data = generate_tabular_data(
-            email_content, contact_names, interaction_counts, invitation_counts, acceptance_counts,
+            email_content, contact_names, interaction_counts, invitation_counts,
             first_email_dates, last_email_dates, sentiment_scores, relationship_summaries, monthly_interactions,
             user_initiation, personalization_scores, follow_up_rates, keywords, response_times_by_contact, median_response_times, user_email
         )
@@ -378,65 +364,111 @@ def clean_headers(msg):
     except Exception as e:
         print(f'Error cleaning headers: {e}')
 
-def extract_mbox(input_mbox, user_email, nlp):
+def predict_spam(text, model, tokenizer):
+    inputs = tokenizer(text, return_tensors="pt")
+
+    with torch.no_grad():
+        outputs = model(**inputs)
+
+    logits = outputs.logits
+    probabilities = F.softmax(logits, dim=-1)
+    predicted_class = torch.argmax(probabilities, dim=-1).item()
+    labels = ['not spam', 'spam']
+    predicted_label = labels[predicted_class]
+    
+    return predicted_label
+
+def clean_payload(payload, forwarded_message_pattern, on_wrote_pattern, from_pattern):
+    try:
+        payload = payload.replace('\r\n', ' ')
+        if re.match(forwarded_message_pattern, payload, re.DOTALL):
+            payload = payload
+        elif re.match(on_wrote_pattern, payload, re.DOTALL):
+            match = re.match(on_wrote_pattern, payload, re.DOTALL)
+            if match:
+                payload = match.group(1)
+        
+        elif re.match(from_pattern, payload, re.DOTALL):
+            match = re.match(from_pattern, payload, re.DOTALL)
+            if match:
+                payload = match.group(1)
+        
+        return payload
+
+    except Exception as e:
+        print(f'Error cleaning payload: {e}')
+
+def extract_mbox(input_mbox, model, tokenizer):
+
+    on_wrote_pattern = r'^(.*?)(On .*? wrote:)'
+    from_pattern = r'(.*?)(From:\s*(.*)\s*<([^>]+@[^>]+)>)'
+    forwarded_message_pattern = r'^-{10,} Forwarded message -{10,}$'
+
     try:
         processed_messages = []
         in_mbox = mailbox.mbox(input_mbox)
         count = 0
-        filtered = 0
         
-        with open('filter.txt', 'w') as file:
-            for message in in_mbox:
-                print(f"Extracting message #{count}")
-                count += 1
-                from_address = str(message.get('From', ''))
-                if from_address:
-                    if any(spam in from_address for spam in SPAM):
-                        filtered += 1
-                        continue
-                
-                from_address = str(message.get('From', ''))
-                if user_email not in from_address:
-                    doc = nlp(from_address)
-                    for ent in doc.ents:
-                        if ent.label_ == 'ORG':
-                            file.write(f'{from_address}, {ent.text}\n')
-                            filtered += 1
-                            continue
-                
-                if message.is_multipart():
-                    combined_payload = []
+        for message in in_mbox:
+            print(f"Extracting message #{count} of {len(in_mbox)}")
+            count += 1
+            
+            if message.is_multipart():
+                combined_payload = []
+                try:
+                    for part in message.walk():
+                        if part.get_content_type() == 'text/plain':
+                            payload = str(part.get_payload(decode=True).decode('utf-8', errors='replace'))
+                            if not payload:
+                                continue
+                            payload = clean_payload(payload, forwarded_message_pattern, on_wrote_pattern, from_pattern)
+                            combined_payload.append(payload)
+                    
+                    combined_payload = '\n'.join(combined_payload)
+
                     try:
-                        for part in message.walk():
-                            if part.get_content_type() == 'text/plain':
-                                payload = part.get_payload(decode=True).decode('utf-8', errors='replace')
-                                combined_payload.append(str(payload))
-                        
-                        combined_payload = '\n'.join(combined_payload)
-                        
-                        email_dict = {
-                            'From': str(message.get('From')),
-                            'To': str(message.get('To')),
-                            'Subject': str(message.get('Subject')),
-                            'Date': str(message.get('Date')),
-                            'Body': combined_payload
-                        }
-
-                        processed_messages.append(email_dict)
-
+                        result = predict_spam(combined_payload, model, tokenizer)
+                        if result == 'spam':
+                            continue
                     except Exception as e:
-                        print(f'Error processing message: {e}')
                         continue
 
-                else:
-                    if message.get_content_type() != 'text/plain':
-                        continue
+                    email_dict = {
+                        'From': str(message.get('From')),
+                        'To': str(message.get('To')),
+                        'Subject': str(message.get('Subject')),
+                        'Date': str(message.get('Date')),
+                        'Body': combined_payload
+                    }
 
-                    email_dict = clean_headers(message)
-                    email_dict['Body'] = str(message.get_payload(decode=True).decode('utf-8', errors='replace'))
                     processed_messages.append(email_dict)
 
-            return processed_messages
+                except Exception as e:
+                    print(f'Error processing message: {e}')
+                    continue
+
+            else:
+                if message.get_content_type() != 'text/plain':
+                    continue
+
+                email_dict = clean_headers(message)
+                payload = str(message.get_payload(decode=True).decode('utf-8', errors='replace'))
+                if not payload:
+                    continue
+
+                payload = clean_payload(payload, forwarded_message_pattern, on_wrote_pattern, from_pattern)
+
+                try:
+                    result = predict_spam(payload, model, tokenizer)
+                    if result == 'spam':
+                        continue
+                except Exception as e:
+                    continue
+
+                email_dict['Body'] = payload
+                processed_messages.append(email_dict)
+
+        return processed_messages
     
     except Exception as e:
         print(f'Error extracting mbox: {e}')
@@ -538,7 +570,11 @@ def analyze():
         file.save(file_path)
 
     nlp = spacy.load("en_core_web_sm")
-    data = extract_mbox(file_path, user_email, nlp)
+    model_name = "mrm8488/bert-tiny-finetuned-sms-spam-detection"
+    model = AutoModelForSequenceClassification.from_pretrained(model_name)
+    tokenizer = AutoTokenizer.from_pretrained(model_name)
+
+    data = extract_mbox(file_path, model, tokenizer)
     
     try:
         obj = main(data, user_email, nlp)
@@ -553,4 +589,4 @@ def analyze():
 if __name__ == '__main__':
     app.run(debug=True)
 
-# emails displayed in chronological order, fix user_initiated, handle missing values, no need to assign dictionary values to None, round during division
+# emails displayed in chronological order, round during division, parse date, stop words, thread first email, sorted()
