@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,11 +7,15 @@
     <title>Inbox Analysis</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Roboto', sans-serif;
             line-height: 1.6;
             margin: 0;
             padding: 0;
-            background-color: #f4f4f4;
+            background-color: #f4f4f9;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* Center the entire body content */
         }
 
         h1, h2 {
@@ -20,22 +25,26 @@
         h1 {
             text-align: center;
             margin-top: 20px;
+            font-size: 2.5em;
+            font-weight: 300;
         }
 
         form {
             display: block;
-            width: 300px;
+            max-width: 500px;
             margin: 20px auto;
             padding: 20px;
-            background: #fff;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            border: 1px solid #ddd;
         }
 
         label {
             display: block;
             margin-bottom: 8px;
-            font-weight: bold;
+            font-weight: 500;
+            color: #555;
         }
 
         input[type="email"],
@@ -43,21 +52,24 @@
             width: calc(100% - 20px);
             box-sizing: border-box;
             margin-bottom: 16px;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 16px;
         }
 
         button {
             display: block;
             width: 100%;
-            padding: 10px;
+            padding: 12px;
             border: none;
             background: #007bff;
-            color: #fff;
-            border-radius: 4px;
-            font-size: 16px;
+            color: #ffffff;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 500;
             cursor: pointer;
+            transition: background 0.3s ease;
         }
 
         button:hover {
@@ -67,44 +79,80 @@
         #loading {
             text-align: center;
             font-size: 18px;
-            color: #555;
+            color: #777;
         }
 
-        #summary {
-            width: 80%;
-            max-width: 800px;
-            margin: 20px auto;
+        #summary-container {
+            width: 95vw; /* 90% of the viewport width */
             padding: 20px;
-            background: #fff;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center; /* Center the summary boxes horizontally */
+            box-sizing: border-box;
         }
 
-        #summary p {
-            margin: 10px 0;
-        }
-
-        #plots, #dataframe {
-            width: 90%;
-            max-width: 90vw; /* Ensure it does not exceed 80% of the viewport width */
-            margin: 20px auto;
+        .summary-box {
+            flex: 1 1 calc(16.666% - 20px); /* 6 items per row */
             padding: 20px;
-            background: #fff;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 12px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border: 1px solid #ddd;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .summary-box h2 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .summary-box p {
+            margin: 10px 0 0;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        #plots-container {
+            width: 95vw; /* 90% of the viewport width */
+            padding: 20px;
+            display: flex;
+            gap: 20px;
+            overflow-x: auto; /* Allows horizontal scrolling if necessary */
+            justify-content: center; /* Center the plots horizontally */
+            box-sizing: border-box;
         }
 
         #plots img {
+            flex: 1 1 calc(33.333% - 20px); /* 3 items per row */
             display: block;
             width: 100%;
-            max-height: 300px;
+            max-height: 400px;
             object-fit: contain;
-            margin-bottom: 10px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.8);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            box-sizing: border-box;
+        }
+
+        #dataframe {
+            width: 95vw; /* 90% of the viewport width */
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 12px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            box-sizing: border-box;
         }
 
         #dataframe iframe {
             width: 100%;
-            height: 500px;
+            height: 600px;
             border: none;
         }
     </style>
@@ -125,21 +173,37 @@
         <p>Processing your file...</p>
     </div>
 
-    <div id="summary">
-        <h2>Summary</h2>
-        <p>Number of initiations: <span id="num_initiations"></span></p>
-        <p>Total number of emails exchanged: <span id="num_emails"></span></p>
-        <p>Average number of interactions per month: <span id="avg_emails_per_month"></span></p>
-        <p>Average response time (hours): <span id="avg_response_time"></span></p>
-        <p>Average sentiment score: <span id="avg_sentiment_score"></span></p>
-        <p>Average personalization score: <span id="avg_personalization_score"></span></p>
+    <div id="summary-container">
+        <div class="summary-box">
+            <h2>Number of initiations</h2>
+            <p id="num_initiations"></p>
+        </div>
+        <div class="summary-box">
+            <h2>Total number of emails exchanged</h2>
+            <p id="num_emails"></p>
+        </div>
+        <div class="summary-box">
+            <h2>Average number of interactions per month</h2>
+            <p id="avg_emails_per_month"></p>
+        </div>
+        <div class="summary-box">
+            <h2>Average response time (hours)</h2>
+            <p id="avg_response_time"></p>
+        </div>
+        <div class="summary-box">
+            <h2>Average sentiment score</h2>
+            <p id="avg_sentiment_score"></p>
+        </div>
+        <div class="summary-box">
+            <h2>Average personalization score</h2>
+            <p id="avg_personalization_score"></p>
+        </div>
     </div>
 
-    <div id="plots">
-        <h2>Dashboard</h2>
-        <img id="histogram_response_times">
-        <img id="histogram_personalization_scores">
-        <img id="pie_chart_sentiment_analysis">
+    <div id="plots-container">
+        <!-- <img id="histogram_response_times" alt="Histogram of Response Times"> -->
+        <img id="histogram_personalization_scores" alt="Histogram of Personalization Scores">
+        <img id="pie_chart_sentiment_analysis" alt="Pie Chart of Sentiment Analysis">
     </div>
 
     <div id="dataframe">
@@ -174,7 +238,7 @@
                     document.getElementById('avg_sentiment_score').textContent = response.avg_sentiment_score;
                     document.getElementById('avg_personalization_score').textContent = response.avg_personalization_score;
 
-                    document.getElementById('histogram_response_times').src = '/static/histogram_response_times.png';
+                    // document.getElementById('histogram_response_times').src = '/static/histogram_response_times.png';
                     document.getElementById('histogram_personalization_scores').src = '/static/histogram_personalization_scores.png';
                     document.getElementById('pie_chart_sentiment_analysis').src = '/static/pie_chart_sentiment_analysis.png';
 

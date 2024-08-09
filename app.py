@@ -22,7 +22,7 @@ matplotlib.use('Agg') # Required for matplotlib to work with Flask
 UPLOAD_FOLDER = 'uploads/'
 STATIC_FOLDER = 'static/'
 
-BLOCKED_CONTACTS = ['reply', 'support', 'notifications', 'human resources', 'rewards', 'orders', 'alerts', 'talent', 'info', 'email', 'customer', 'account', 'admission', 'store', 'club']
+BLOCKED_CONTACTS = ['reply', 'support', 'notifications', 'human resources', 'rewards', 'orders', 'alerts', 'talent', 'info', 'email', 'customer', 'account', 'admission', 'store', 'club', 'subscription', 'news', 'newsletter', 'product', 'updates']
 
 INVITATION_KEYWORDS = {
     'invite', 'invites', 'invited', 'inviting', 'invitation', 'introduce', 'introduction', 'RSVP', 'like to meet', 'attend', 'event', 'participate'
@@ -39,7 +39,8 @@ STOP_WORDS = {'i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you'
     'now', 'hello', 'dear', 'hi', 'hey', 'regards', 'thanks', 'thank', 'best', 'kind', 'warm', 'sincerely', 'yours', 'tomorrow',
     'cheers', 'everything', 'next', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday', 'need', 'please',
     'january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december',
-    '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', 'am', 'pm'
+    '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', 'am', 'pm', 'it', 'its', 'it\'s', 'they', 'them', 'their', 'theirs', 'yes',
+    'ipad', 'iphone', 'would', 'just', 'i\'m', 'i\'d' , 'i\'ve', 'you\'re', 'i\'ll'
 }
 
 def parse_date(date_string):
@@ -192,7 +193,7 @@ def find_keywords(keywords, address, emails):
         filtered_messages = [word for word in all_messages if word not in STOP_WORDS]
         word_counts = Counter(filtered_messages)
         most_common_words = word_counts.most_common(5)
-        top_words = [word for word, count in most_common_words]
+        top_words = ', '.join([word for word, count in most_common_words])
         keywords[address] = top_words
         
     except Exception as e:
@@ -263,6 +264,8 @@ def process_message(message, email_meta, email_content, contact_names, interacti
                 'Body': body
             })
 
+            body = body.replace('\r\n', ' ')
+            body = body.replace('\n', ' ')
             email_content[address].append(body)
 
             interaction_counts[address] += 1
@@ -287,7 +290,7 @@ def generate_tabular_data(email_meta, email_content, contact_names, interaction_
             'emails_exchanged': interaction_counts.get(contact, 0),
             'number_of_invitations_received': invitation_counts.get(contact, 0),
             'duration_known (months)': ((last_email_dates.get(contact) - first_email_dates.get(contact)).days) / 30 if first_email_dates.get(contact) and last_email_dates.get(contact) else 0,
-            'emails': email_content.get(contact, 'N/A'),
+            # 'emails': email_content.get(contact, 'N/A'),
             'sentiment_score': sentiment_scores.get(contact, 0),
             'relationship_summary': relationship_summaries.get(contact, 'N/A'),
             'user_initiated': user_initiation.get(contact, False    ),
@@ -420,36 +423,42 @@ def extract_mbox(input_mbox, model, tokenizer):
             from_address = str(message.get('From'))
             if any(word in from_address.lower() for word in BLOCKED_CONTACTS):
                 continue
+
+            to_address = str(message.get('To'))
+            if any(word in to_address.lower() for word in BLOCKED_CONTACTS):
+                continue
             
             if message.is_multipart():
                 for part in message.walk():
-                    if part.get_content_type() == 'text/plain':
-                        payload = str(part.get_payload(decode=True).decode('utf-8', errors='replace'))
-                        if not payload.strip():
-                            continue
+                    if part.get_content_type() != 'text/plain':
+                        continue
+
+                    payload = str(part.get_payload(decode=True).decode('utf-8', errors='replace'))
+                    if not payload.strip():
+                        continue
+                
+                    if 'unsubscribe' in payload.lower():
+                        continue
                     
-                        if 'unsubscribe' in payload.lower():
+                    payload = clean_payload(payload, forwarded_message_pattern, on_wrote_pattern, from_pattern)
+            
+                    try:
+                        result = predict_spam(payload, model, tokenizer)
+                        if result == 'spam':
                             continue
-                        
-                        payload = clean_payload(payload, forwarded_message_pattern, on_wrote_pattern, from_pattern)
-                
-                        try:
-                            result = predict_spam(payload, model, tokenizer)
-                            if result == 'spam':
-                                continue
-                        except Exception as e:
-                            continue
-                
-                        email_dict = {
-                            'From': str(message.get('From')),
-                            'To': str(message.get('To')),
-                            'Subject': str(message.get('Subject')),
-                            'Date': str(message.get('Date')),
-                            'Body': payload
-                        }
-                        
-                        processed_messages.append(email_dict)
-                        break
+                    except Exception as e:
+                        continue
+            
+                    email_dict = {
+                        'From': str(message.get('From')),
+                        'To': str(message.get('To')),
+                        'Subject': str(message.get('Subject')),
+                        'Date': str(message.get('Date')),
+                        'Body': payload
+                    }
+                    
+                    processed_messages.append(email_dict)
+                    break
 
             else:
                 if message.get_content_type() != 'text/plain':
@@ -556,10 +565,10 @@ def generate_summary(data):
         return {
             'num_initiations': num_contacts_user_initiated_true,
             'total_emails_exchanged': total_emails_exchanged,
-            'avg_emails_per_month': round(average_emails_per_month, 2) if not np.isnan(average_emails_per_month) else None,
-            'avg_response_time': round(average_response_time, 2) if not np.isnan(average_response_time) else None,
-            'avg_sentiment_score': round(average_sentiment_score, 2) if not np.isnan(average_sentiment_score) else None,
-            'avg_personalization_score': round(average_personalization_score, 2) if not np.isnan(average_personalization_score) else None
+            'avg_emails_per_month': round(average_emails_per_month, 2),
+            'avg_response_time': round(average_response_time, 2),
+            'avg_sentiment_score': round(average_sentiment_score, 2),
+            'avg_personalization_score': round(average_personalization_score, 2)
         }
 
     except Exception as e:
@@ -607,4 +616,4 @@ def analyze():
 if __name__ == '__main__':
     app.run(debug=True)
 
-# emails displayed in chronological order, round during division, parse date, stop words, thread first email, sorted(), filter previous emails in thread
+# emails displayed in chronological order, round during division, parse date, sorted()
