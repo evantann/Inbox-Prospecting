@@ -417,7 +417,7 @@ def extract_mbox(input_mbox, model, tokenizer):
             print(f"Extracting message #{count} of {len(in_mbox)}")
             count += 1
 
-            from_address = message.get('From')
+            from_address = str(message.get('From'))
             if any(word in from_address.lower() for word in BLOCKED_CONTACTS):
                 continue
             
