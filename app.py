@@ -22,6 +22,8 @@ matplotlib.use('Agg') # Required for matplotlib to work with Flask
 UPLOAD_FOLDER = 'uploads/'
 STATIC_FOLDER = 'static/'
 
+BLOCKED_CONTACTS = ['reply', 'support', 'notifications', 'human resources', 'rewards', 'orders', 'alerts', 'talent', 'info', 'email', 'customer', 'account', 'admission', 'store', 'club']
+
 INVITATION_KEYWORDS = {
     'invite', 'invites', 'invited', 'inviting', 'invitation', 'introduce', 'introduction', 'RSVP', 'like to meet', 'attend', 'event', 'participate'
 }
@@ -380,7 +382,6 @@ def predict_spam(text, model, tokenizer):
 
 def clean_payload(payload, forwarded_message_pattern, on_wrote_pattern, from_pattern):
     try:
-        payload = payload.replace('\r\n', ' ')
         if re.match(forwarded_message_pattern, payload, re.DOTALL):
             payload = payload
         elif re.match(on_wrote_pattern, payload, re.DOTALL):
@@ -401,7 +402,7 @@ def clean_payload(payload, forwarded_message_pattern, on_wrote_pattern, from_pat
 def extract_mbox(input_mbox, model, tokenizer):
 
     on_wrote_pattern = r'^(.*?)(On .*? wrote:)'
-    from_pattern = r'(.*?)(From:\s*(.*)\s*<([^>]+@[^>]+)>)'
+    from_pattern = r'^(.*?)(?=From:.*<[^>]+>)'
     forwarded_message_pattern = r'^-{10,} Forwarded message -{10,}$'
 
     try:
@@ -412,40 +413,40 @@ def extract_mbox(input_mbox, model, tokenizer):
         for message in in_mbox:
             print(f"Extracting message #{count} of {len(in_mbox)}")
             count += 1
+
+            from_address = message.get('From')
+            if any(word in from_address.lower() for word in BLOCKED_CONTACTS):
+                continue
             
             if message.is_multipart():
-                combined_payload = []
-                try:
-                    for part in message.walk():
-                        if part.get_content_type() == 'text/plain':
-                            payload = str(part.get_payload(decode=True).decode('utf-8', errors='replace'))
-                            if not payload:
-                                continue
-                            payload = clean_payload(payload, forwarded_message_pattern, on_wrote_pattern, from_pattern)
-                            combined_payload.append(payload)
-                    
-                    combined_payload = '\n'.join(combined_payload)
-
-                    try:
-                        result = predict_spam(combined_payload, model, tokenizer)
-                        if result == 'spam':
+                for part in message.walk():
+                    if part.get_content_type() == 'text/plain':
+                        payload = str(part.get_payload(decode=True).decode('utf-8', errors='replace'))
+                        if not payload.strip():
                             continue
-                    except Exception as e:
-                        continue
-
-                    email_dict = {
-                        'From': str(message.get('From')),
-                        'To': str(message.get('To')),
-                        'Subject': str(message.get('Subject')),
-                        'Date': str(message.get('Date')),
-                        'Body': combined_payload
-                    }
-
-                    processed_messages.append(email_dict)
-
-                except Exception as e:
-                    print(f'Error processing message: {e}')
-                    continue
+                    
+                        if 'unsubscribe' in payload.lower():
+                            continue
+                        
+                        payload = clean_payload(payload, forwarded_message_pattern, on_wrote_pattern, from_pattern)
+                
+                        try:
+                            result = predict_spam(payload, model, tokenizer)
+                            if result == 'spam':
+                                continue
+                        except Exception as e:
+                            continue
+                
+                        email_dict = {
+                            'From': str(message.get('From')),
+                            'To': str(message.get('To')),
+                            'Subject': str(message.get('Subject')),
+                            'Date': str(message.get('Date')),
+                            'Body': payload
+                        }
+                        
+                        processed_messages.append(email_dict)
+                        break
 
             else:
                 if message.get_content_type() != 'text/plain':
@@ -453,9 +454,12 @@ def extract_mbox(input_mbox, model, tokenizer):
 
                 email_dict = clean_headers(message)
                 payload = str(message.get_payload(decode=True).decode('utf-8', errors='replace'))
-                if not payload:
+                if not payload.strip():
                     continue
 
+                if 'unsubscribe' in payload.lower():
+                    continue
+                
                 payload = clean_payload(payload, forwarded_message_pattern, on_wrote_pattern, from_pattern)
 
                 try:
@@ -464,9 +468,20 @@ def extract_mbox(input_mbox, model, tokenizer):
                         continue
                 except Exception as e:
                     continue
-
+                
                 email_dict['Body'] = payload
                 processed_messages.append(email_dict)
+
+        with open('school_filtered.txt', 'w') as f:
+            for message in processed_messages:
+                f.write(message['Body'])
+                f.write('\n' + '=' * 75 + '--MESSAGE--' + '=' * 75 + '\n')
+        f.close()
+
+
+        with open('school_filtered.json', 'w') as f:
+            json.dump(processed_messages, f, indent=4)
+        f.close()
 
         return processed_messages
     
@@ -589,4 +604,4 @@ def analyze():
 if __name__ == '__main__':
     app.run(debug=True)
 
-# emails displayed in chronological order, round during division, parse date, stop words, thread first email, sorted()
+# emails displayed in chronological order, round during division, parse date, stop words, thread first email, sorted(), filter previous emails in thread
