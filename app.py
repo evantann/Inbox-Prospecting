@@ -198,7 +198,7 @@ def find_keywords(keywords, address, emails):
     except Exception as e:
         print(f"Error in finding keywords: {e}")
 
-def process_message(message, email_content, contact_names, interaction_counts, invitation_counts, first_email_dates, last_email_dates, user_email):
+def process_message(message, email_meta, email_content, contact_names, interaction_counts, invitation_counts, first_email_dates, last_email_dates, user_email):
     try:
         contacts = []
 
@@ -255,13 +255,15 @@ def process_message(message, email_content, contact_names, interaction_counts, i
                             contact_names[address] = name
 
         for address in contacts:
-            email_content[address].append({
+            email_meta[address].append({
                 'From': from_address,
                 'To': to_addresses,
                 'Subject': subject,
                 'Date': date_str,
                 'Body': body
             })
+
+            email_content[address].append(body)
 
             interaction_counts[address] += 1
 
@@ -277,7 +279,7 @@ def process_message(message, email_content, contact_names, interaction_counts, i
     except Exception as e:
         print(f"Error processing message: {e}")
 
-def generate_tabular_data(email_content, contact_names, interaction_counts, invitation_counts, first_email_dates, last_email_dates, sentiment_scores, relationship_summaries, monthly_interactions, user_initiation, personalization_scores, follow_up_rates, keywords, response_times_by_contact, median_response_times, user_email):
+def generate_tabular_data(email_meta, email_content, contact_names, interaction_counts, invitation_counts, first_email_dates, last_email_dates, sentiment_scores, relationship_summaries, monthly_interactions, user_initiation, personalization_scores, follow_up_rates, keywords, response_times_by_contact, median_response_times, user_email):
     try:
         data = [{
             'contact': contact_names.get(contact, 'N/A'),
@@ -294,7 +296,7 @@ def generate_tabular_data(email_content, contact_names, interaction_counts, invi
             'average_response_time (hours)': response_times_by_contact.get(contact, 0),
             'median_response_time (hours)': median_response_times.get(contact, 0),
             'keywords': keywords.get(contact, 'N/A'),
-            'personalization_score': personalization_scores.get(contact, 0) / (sum(1 for email in email_content.get(contact, []) if user_email in email['From']) if sum(1 for email in email_content.get(contact, []) if user_email in email['From']) > 0 else 1)
+            'personalization_score': personalization_scores.get(contact, 0) / (sum(1 for email in email_meta.get(contact, []) if user_email in email['From']) if sum(1 for email in email_meta.get(contact, []) if user_email in email['From']) > 0 else 1)
         } for contact in email_content]
         return data
     except Exception as e:
@@ -304,6 +306,7 @@ def generate_tabular_data(email_content, contact_names, interaction_counts, invi
 def main(data, user_email, nlp):
     try:
         keywords = defaultdict(list)
+        email_meta = defaultdict(list)
         email_content = defaultdict(list)
         contact_names = defaultdict(str)
         sentiment_scores = defaultdict(str)   
@@ -324,11 +327,11 @@ def main(data, user_email, nlp):
         count = 0
         
         for entry in data: 
-            process_message(entry, email_content, contact_names, interaction_counts, invitation_counts, first_email_dates, last_email_dates, user_email)
+            process_message(entry, email_meta, email_content, contact_names, interaction_counts, invitation_counts, first_email_dates, last_email_dates, user_email)
 
-        for address, emails in email_content.items():
+        for address, emails in email_meta.items():
             count += 1
-            print(f'Processing contact {count} of {len(email_content)}')
+            print(f'Processing contact {count} of {len(email_meta)}')
             sentiment_analysis(sentiment_scores, relationship_summaries, address, emails)
             calculate_interaction_frequency(monthly_interactions, interactions_each_month, address, emails)
             calculate_personalization_score(nlp, personalization_scores, address, emails, user_email)
@@ -343,7 +346,7 @@ def main(data, user_email, nlp):
         calculate_response_times(threads, response_times_by_contact, response_times, median_response_times, user_email)
         
         output_data = generate_tabular_data(
-            email_content, contact_names, interaction_counts, invitation_counts,
+            email_meta, email_content, contact_names, interaction_counts, invitation_counts,
             first_email_dates, last_email_dates, sentiment_scores, relationship_summaries, monthly_interactions,
             user_initiation, personalization_scores, follow_up_rates, keywords, response_times_by_contact, median_response_times, user_email
         )
@@ -472,16 +475,16 @@ def extract_mbox(input_mbox, model, tokenizer):
                 email_dict['Body'] = payload
                 processed_messages.append(email_dict)
 
-        with open('school_filtered.txt', 'w') as f:
-            for message in processed_messages:
-                f.write(message['Body'])
-                f.write('\n' + '=' * 75 + '--MESSAGE--' + '=' * 75 + '\n')
-        f.close()
+        # with open('school_filtered.txt', 'w') as f:
+        #     for message in processed_messages:
+        #         f.write(message['Body'])
+        #         f.write('\n' + '=' * 75 + '--MESSAGE--' + '=' * 75 + '\n')
+        # f.close()
 
 
-        with open('school_filtered.json', 'w') as f:
-            json.dump(processed_messages, f, indent=4)
-        f.close()
+        # with open('school_filtered.json', 'w') as f:
+        #     json.dump(processed_messages, f, indent=4)
+        # f.close()
 
         return processed_messages
     
