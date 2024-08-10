@@ -354,8 +354,8 @@ def main(data, user_email, nlp):
             user_initiation, personalization_scores, follow_up_rates, keywords, response_times_by_contact, median_response_times, user_email
         )
 
-        with open(f'{user_email}.json', 'w', encoding='utf-8') as json_file:
-            json.dump(output_data, json_file, indent=4)
+        # with open(f'{user_email}.json', 'w', encoding='utf-8') as json_file:
+        #     json.dump(output_data, json_file, indent=4)
 
         print(f'Data has been written to {user_email}.json')
 
