@@ -22,7 +22,7 @@ matplotlib.use('Agg') # Required for matplotlib to work with Flask
 UPLOAD_FOLDER = 'uploads/'
 STATIC_FOLDER = 'static/'
 
-BLOCKED_CONTACTS = ['reply', 'support', 'notifications', 'human resources', 'rewards', 'orders', 'alerts', 'talent', 'recruit', 'info', 'email', 'customer', 'account', 'admission', 'store', 'club', 'subscription', 'news', 'newsletter', 'product', 'updates', 'help', 'assistance', 'jury', 'careers', 'sale', 'response', 'guest', 'user', 'robot']
+BLOCKED_CONTACTS = ['reply', 'support', 'notification', 'human resources', 'rewards', 'orders', 'alerts', 'talent', 'recruit', 'info', 'email', 'customer', 'account', 'admission', 'store', 'club', 'subscription', 'news', 'newsletter', 'product', 'updates', 'help', 'assistance', 'jury', 'careers', 'sale', 'response', 'guest', 'user', 'robot', 'confirm', 'automate', 'website', 'notice']
 
 INVITATION_KEYWORDS = {
     'invite', 'invites', 'invited', 'inviting', 'invitation', 'introduce', 'introduction', 'RSVP', 'like to meet', 'attend', 'event', 'participate'
@@ -57,6 +57,8 @@ def parse_date(date_string):
             return datetime.strptime(date_string, format_string)
         except ValueError:
             continue
+
+    print(f"Could not parse date: {date_string}")
     
     return None
 
@@ -377,9 +379,6 @@ def main(data, user_email, nlp):
             personalization_scores, follow_up_rates, keywords, contact_response_times, user_response_times_by_contact, median_response_times, user_email
         )
 
-        # with open(f'{user_email}.json', 'w', encoding='utf-8') as json_file:
-        #     json.dump(output_data, json_file, indent=4)
-
         print(f'Data has been written to {user_email}.json')
 
         return output_data
@@ -523,6 +522,8 @@ def generate_plots(data):
             (df['personalization_score'] > 0)
         ]
 
+        df_top_100 = df.sort_values(by='emails_exchanged', ascending=False).head(100)
+
         # Histogram of Average Response Times
         # plt.figure(figsize=(12, 6))
         # sns.histplot(df_filtered['average_response_time (hours)'], bins=10, kde=True, color='blue')
@@ -533,7 +534,7 @@ def generate_plots(data):
         # plt.savefig('static/histogram_response_times.png')
         # plt.close()
 
-        # # Histogram of Personalization Scores
+        # Histogram of Personalization Scores
         # plt.figure(figsize=(12, 6))
         # sns.histplot(df_filtered['personalization_score'], bins=10, kde=True, color='green')
         # plt.title('Histogram of Personalization Scores')
@@ -545,7 +546,7 @@ def generate_plots(data):
 
         # Histogram of Number of Interactions
         plt.figure(figsize=(12, 6))
-        sns.histplot(df['emails_exchanged'], bins=10, kde=True, color='purple')
+        sns.histplot(df_top_100['emails_exchanged'], bins=50, kde=True, color='purple')
         plt.title('Histogram of Number of Interactions')
         plt.xlabel('Number of Interactions')
         plt.ylabel('Frequency')
