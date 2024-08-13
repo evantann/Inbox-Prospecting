@@ -22,7 +22,7 @@ matplotlib.use('Agg') # Required for matplotlib to work with Flask
 UPLOAD_FOLDER = 'uploads/'
 STATIC_FOLDER = 'static/'
 
-BLOCKED_CONTACTS = ['reply', 'support', 'notifications', 'human resources', 'rewards', 'orders', 'alerts', 'talent', 'info', 'email', 'customer', 'account', 'admission', 'store', 'club', 'subscription', 'news', 'newsletter', 'product', 'updates']
+BLOCKED_CONTACTS = ['reply', 'support', 'notifications', 'human resources', 'rewards', 'orders', 'alerts', 'talent', 'recruit', 'info', 'email', 'customer', 'account', 'admission', 'store', 'club', 'subscription', 'news', 'newsletter', 'product', 'updates', 'help', 'assistance', 'jury', 'careers', 'sale', 'response', 'guest', 'user', 'robot']
 
 INVITATION_KEYWORDS = {
     'invite', 'invites', 'invited', 'inviting', 'invitation', 'introduce', 'introduction', 'RSVP', 'like to meet', 'attend', 'event', 'participate'
@@ -545,7 +545,7 @@ def generate_plots(data):
 
         # Histogram of Number of Interactions
         plt.figure(figsize=(12, 6))
-        sns.histplot(df['number_of_invitations_received'], bins=10, kde=True, color='purple')
+        sns.histplot(df['emails_exchanged'], bins=10, kde=True, color='purple')
         plt.title('Histogram of Number of Interactions')
         plt.xlabel('Number of Interactions')
         plt.ylabel('Frequency')
