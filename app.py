@@ -94,7 +94,7 @@ def organize_by_thread(threads, address, emails):
     except Exception as e:
         print(f"Error in organize_by_thread: {e}")
 
-def calculate_response_times(threads, response_times_by_contact, response_times, median_response_times, user_email):
+def calculate_user_response_times(threads, user_response_times_by_contact, median_response_times, user_email):
     try:
         for contact, threadz in threads.items():
             for emails in threadz.values():
@@ -108,13 +108,35 @@ def calculate_response_times(threads, response_times_by_contact, response_times,
                         if current_date and previous_date:
                             response_time = (current_date - previous_date).seconds
                             response_time /= 3600
-                            response_times.append(response_time)
-                            response_times_by_contact[contact].append(response_time)
+                            user_response_times_by_contact[contact].append(response_time)
 
-        for contact, times in response_times_by_contact.items():
+        for contact, times in user_response_times_by_contact.items():
             if times:
                 median_response_times[contact] = np.median(times)
-                response_times_by_contact[contact] = sum(times) / len(times)
+                user_response_times_by_contact[contact] = sum(times) / len(times)
+
+    except Exception as e:
+        print(f"Error in calculating response times: {e}")
+
+def calculate_contact_response_times(threads, contact_response_times, user_email):
+    try:
+        for contact, threadz in threads.items():
+            for emails in threadz.values():
+                for i in range(1, len(emails)):
+                    current_email = emails[i]
+                    previous_email = emails[i - 1]
+                    
+                    if user_email in previous_email['From'] and user_email not in current_email['From']:
+                        current_date = parse_date(current_email['Date'])
+                        previous_date = parse_date(previous_email['Date'])
+                        if current_date and previous_date:
+                            response_time = (current_date - previous_date).seconds
+                            response_time /= 3600
+                            contact_response_times[contact].append(response_time)
+
+        for contact, times in contact_response_times.items():
+            if times:
+                contact_response_times[contact] = sum(times) / len(times)
 
     except Exception as e:
         print(f"Error in calculating response times: {e}")
@@ -282,7 +304,7 @@ def process_message(message, email_meta, email_content, contact_names, interacti
     except Exception as e:
         print(f"Error processing message: {e}")
 
-def generate_tabular_data(email_meta, email_content, contact_names, interaction_counts, invitation_counts, first_email_dates, last_email_dates, sentiment_scores, relationship_summaries, monthly_interactions, user_initiation, personalization_scores, follow_up_rates, keywords, response_times_by_contact, median_response_times, user_email):
+def generate_tabular_data(email_meta, email_content, contact_names, interaction_counts, invitation_counts, first_email_dates, last_email_dates, sentiment_scores, relationship_summaries, monthly_interactions, user_initiation, personalization_scores, follow_up_rates, keywords, contact_response_times, user_response_times_by_contact, median_response_times, user_email):
     try:
         data = [{
             'contact': contact_names.get(contact, 'N/A'),
@@ -290,13 +312,13 @@ def generate_tabular_data(email_meta, email_content, contact_names, interaction_
             'emails_exchanged': interaction_counts.get(contact, 0),
             'number_of_invitations_received': invitation_counts.get(contact, 0),
             'duration_known (months)': ((last_email_dates.get(contact) - first_email_dates.get(contact)).days) / 30 if first_email_dates.get(contact) and last_email_dates.get(contact) else 0,
-            # 'emails': email_content.get(contact, 'N/A'),
             'sentiment_score': sentiment_scores.get(contact, 0),
             'relationship_summary': relationship_summaries.get(contact, 'N/A'),
             'user_initiated': user_initiation.get(contact, False    ),
             'interaction_frequency (emails per month)': monthly_interactions.get(contact, 0),
             'follow_up_rate (%)': follow_up_rates.get(contact, 0),
-            'average_response_time (hours)': response_times_by_contact.get(contact, 0),
+            "contact_response_time (hours)": contact_response_times.get(contact, 0),
+            'average_response_time (hours)': user_response_times_by_contact.get(contact, 0),
             'median_response_time (hours)': median_response_times.get(contact, 0),
             'keywords': keywords.get(contact, 'N/A'),
             'personalization_score': personalization_scores.get(contact, 0) / (sum(1 for email in email_meta.get(contact, []) if user_email in email['From']) if sum(1 for email in email_meta.get(contact, []) if user_email in email['From']) > 0 else 1)
@@ -315,7 +337,8 @@ def main(data, user_email, nlp):
         sentiment_scores = defaultdict(str)   
         relationship_summaries = defaultdict(str)
         personalization_scores = defaultdict(int)
-        response_times_by_contact = defaultdict(list)
+        user_response_times_by_contact = defaultdict(list)
+        contact_response_times = defaultdict(list)
         median_response_times = defaultdict(int)
         monthly_interactions = defaultdict(int)
         interaction_counts = defaultdict(int)
@@ -326,7 +349,6 @@ def main(data, user_email, nlp):
         first_email_dates = defaultdict(lambda: None)
         threads = defaultdict(lambda: defaultdict(list))
         interactions_each_month = defaultdict(lambda: [0] * 13)
-        response_times = []
         count = 0
         
         for entry in data: 
@@ -346,12 +368,13 @@ def main(data, user_email, nlp):
             calculate_follow_up_rate(follow_up_rates, address, sorted_emails, user_email)
             user_initiated(user_initiation, address, sorted_emails, user_email)
         
-        calculate_response_times(threads, response_times_by_contact, response_times, median_response_times, user_email)
+        calculate_user_response_times(threads, user_response_times_by_contact, median_response_times, user_email)
+        calculate_contact_response_times(threads, contact_response_times, user_email)
         
         output_data = generate_tabular_data(
             email_meta, email_content, contact_names, interaction_counts, invitation_counts,
-            first_email_dates, last_email_dates, sentiment_scores, relationship_summaries, monthly_interactions,
-            user_initiation, personalization_scores, follow_up_rates, keywords, response_times_by_contact, median_response_times, user_email
+            first_email_dates, last_email_dates, sentiment_scores, relationship_summaries, monthly_interactions, user_initiation,
+            personalization_scores, follow_up_rates, keywords, contact_response_times, user_response_times_by_contact, median_response_times, user_email
         )
 
         # with open(f'{user_email}.json', 'w', encoding='utf-8') as json_file:
@@ -484,16 +507,6 @@ def extract_mbox(input_mbox, model, tokenizer):
                 email_dict['Body'] = payload
                 processed_messages.append(email_dict)
 
-        # with open('school_filtered.txt', 'w') as f:
-        #     for message in processed_messages:
-        #         f.write(message['Body'])
-        #         f.write('\n' + '=' * 75 + '--MESSAGE--' + '=' * 75 + '\n')
-        # f.close()
-
-
-        # with open('school_filtered.json', 'w') as f:
-        #     json.dump(processed_messages, f, indent=4)
-        # f.close()
 
         return processed_messages
     
@@ -510,27 +523,37 @@ def generate_plots(data):
             (df['personalization_score'] > 0)
         ]
 
-        # 1. Histogram of Average Response Times
+        # Histogram of Average Response Times
+        # plt.figure(figsize=(12, 6))
+        # sns.histplot(df_filtered['average_response_time (hours)'], bins=10, kde=True, color='blue')
+        # plt.title('Histogram of Average Response Times')
+        # plt.xlabel('Average Response Time (hours)')
+        # plt.ylabel('Frequency')
+        # plt.grid(True)
+        # plt.savefig('static/histogram_response_times.png')
+        # plt.close()
+
+        # # Histogram of Personalization Scores
+        # plt.figure(figsize=(12, 6))
+        # sns.histplot(df_filtered['personalization_score'], bins=10, kde=True, color='green')
+        # plt.title('Histogram of Personalization Scores')
+        # plt.xlabel('Personalization Score')
+        # plt.ylabel('Frequency')
+        # plt.grid(True)
+        # plt.savefig('static/histogram_personalization_scores.png')
+        # plt.close()
+
+        # Histogram of Number of Interactions
         plt.figure(figsize=(12, 6))
-        sns.histplot(df_filtered['average_response_time (hours)'], bins=10, kde=True, color='blue')
-        plt.title('Histogram of Average Response Times')
-        plt.xlabel('Average Response Time (hours)')
+        sns.histplot(df['number_of_invitations_received'], bins=10, kde=True, color='purple')
+        plt.title('Histogram of Number of Interactions')
+        plt.xlabel('Number of Interactions')
         plt.ylabel('Frequency')
         plt.grid(True)
-        plt.savefig('static/histogram_response_times.png')
+        plt.savefig('static/histogram_interactions.png')
         plt.close()
 
-        # 2. Histogram of Personalization Scores
-        plt.figure(figsize=(12, 6))
-        sns.histplot(df_filtered['personalization_score'], bins=10, kde=True, color='green')
-        plt.title('Histogram of Personalization Scores')
-        plt.xlabel('Personalization Score')
-        plt.ylabel('Frequency')
-        plt.grid(True)
-        plt.savefig('static/histogram_personalization_scores.png')
-        plt.close()
-
-        # 3. Pie Chart of Relationship Summary
+        # Pie Chart of Relationship Summary
         sentiment_counts = df['relationship_summary'].value_counts()
         plt.figure(figsize=(8, 8))
         plt.pie(sentiment_counts, labels=sentiment_counts.index, autopct='%1.1f%%', colors=['#66c2a5', '#fc8d62', '#8da0cb'])
@@ -616,4 +639,4 @@ def analyze():
 if __name__ == '__main__':
     app.run(debug=True)
 
-# emails displayed in chronological order, round during division, parse date, sorted()
+# round during division, parse date, sorted()
