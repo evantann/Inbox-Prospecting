@@ -1,6 +1,5 @@
 import os
 import re
-import json
 import spacy
 import torch
 import mailbox
@@ -58,8 +57,6 @@ def parse_date(date_string):
         except ValueError:
             continue
 
-    print(f"Could not parse date: {date_string}")
-    
     return None
 
 def is_invitation(subject, body):
@@ -142,6 +139,15 @@ def calculate_contact_response_times(threads, contact_response_times, user_email
 
     except Exception as e:
         print(f"Error in calculating response times: {e}")
+
+def calculate_thread_length(threads, thread_lengths):
+    try:
+        for contact, threadz in threads.items():
+            for emails in threadz.values():
+                thread_lengths[contact] += 1 + len(emails)
+            thread_lengths[contact] /= len(threadz)
+    except Exception as e:
+        print(f"Error in calculating thread length: {e}")
 
 def calculate_follow_up_rate(follow_up, address, emails, user_email):
     try:
@@ -306,24 +312,26 @@ def process_message(message, email_meta, email_content, contact_names, interacti
     except Exception as e:
         print(f"Error processing message: {e}")
 
-def generate_tabular_data(email_meta, email_content, contact_names, interaction_counts, invitation_counts, first_email_dates, last_email_dates, sentiment_scores, relationship_summaries, monthly_interactions, user_initiation, personalization_scores, follow_up_rates, keywords, contact_response_times, user_response_times_by_contact, median_response_times, user_email):
+def generate_tabular_data(email_meta, email_content, contact_names, interaction_counts, invitation_counts, first_email_dates, last_email_dates, sentiment_scores, relationship_summaries, monthly_interactions, user_initiation, personalization_scores, follow_up_rates, keywords, contact_response_times, user_response_times_by_contact, median_response_times, user_email, thread_lengths):
     try:
         data = [{
             'contact': contact_names.get(contact, 'N/A'),
             'email_address': contact if contact else 'N/A',
             'emails_exchanged': interaction_counts.get(contact, 0),
             'number_of_invitations_received': invitation_counts.get(contact, 0),
-            'duration_known (months)': ((last_email_dates.get(contact) - first_email_dates.get(contact)).days) / 30 if first_email_dates.get(contact) and last_email_dates.get(contact) else 0,
-            'sentiment_score': sentiment_scores.get(contact, 0),
+            'duration_known (months)': round(((last_email_dates.get(contact) - first_email_dates.get(contact)).days) / 30, 2) if first_email_dates.get(contact) and last_email_dates.get(contact) else 0,
+            'sentiment_score': round(sentiment_scores.get(contact, 0), 2),
             'relationship_summary': relationship_summaries.get(contact, 'N/A'),
-            'user_initiated': user_initiation.get(contact, False    ),
-            'interaction_frequency (emails per month)': monthly_interactions.get(contact, 0),
-            'follow_up_rate (%)': follow_up_rates.get(contact, 0),
-            "contact_response_time (hours)": contact_response_times.get(contact, 0),
-            'average_response_time (hours)': user_response_times_by_contact.get(contact, 0),
-            'median_response_time (hours)': median_response_times.get(contact, 0),
+            'user_initiated': user_initiation.get(contact, False),
+            'interaction_frequency (emails per month)': int(monthly_interactions.get(contact, 0)),
+            'follow_up_rate (%)': int(follow_up_rates.get(contact, 0)),
+            "contact_response_time (hours)": round(contact_response_times.get(contact, 0), 2),
+            'average_response_time (hours)': round(user_response_times_by_contact.get(contact, 0), 2),
+            # 'median_response_time (hours)': median_response_times.get(contact, 0),
+            'average_email_chain_length': int(thread_lengths.get(contact, 0)),
             'keywords': keywords.get(contact, 'N/A'),
-            'personalization_score': personalization_scores.get(contact, 0) / (sum(1 for email in email_meta.get(contact, []) if user_email in email['From']) if sum(1 for email in email_meta.get(contact, []) if user_email in email['From']) > 0 else 1)
+            'personalization_score': round(personalization_scores.get(contact, 0) / (sum(1 for email in email_meta.get(contact, []) if user_email in email['From']) or 1), 2)
+
         } for contact in email_content]
         return data
     except Exception as e:
@@ -346,6 +354,7 @@ def main(data, user_email, nlp):
         interaction_counts = defaultdict(int)
         invitation_counts = defaultdict(int)
         follow_up_rates = defaultdict(int)
+        thread_lengths = defaultdict(int)
         user_initiation = defaultdict(bool)
         last_email_dates = defaultdict(lambda: None)
         first_email_dates = defaultdict(lambda: None)
@@ -372,14 +381,13 @@ def main(data, user_email, nlp):
         
         calculate_user_response_times(threads, user_response_times_by_contact, median_response_times, user_email)
         calculate_contact_response_times(threads, contact_response_times, user_email)
+        calculate_thread_length(threads, thread_lengths)
         
         output_data = generate_tabular_data(
             email_meta, email_content, contact_names, interaction_counts, invitation_counts,
             first_email_dates, last_email_dates, sentiment_scores, relationship_summaries, monthly_interactions, user_initiation,
-            personalization_scores, follow_up_rates, keywords, contact_response_times, user_response_times_by_contact, median_response_times, user_email
+            personalization_scores, follow_up_rates, keywords, contact_response_times, user_response_times_by_contact, median_response_times, user_email, thread_lengths
         )
-
-        print(f'Data has been written to {user_email}.json')
 
         return output_data
 
@@ -640,4 +648,4 @@ def analyze():
 if __name__ == '__main__':
     app.run(debug=True)
 
-# round during division, parse date, sorted()
+# unit tests, model tests
