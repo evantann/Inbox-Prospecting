@@ -11,11 +11,14 @@ import torch.nn.functional as F
 import matplotlib.pyplot as plt
 from datetime import datetime
 from textblob import TextBlob
+from supabaseClient import client
 from collections import defaultdict, Counter
 from flask import Flask, render_template, request, jsonify
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
+
 app = Flask(__name__)
+
 matplotlib.use('Agg') # Required for matplotlib to work with Flask
 
 UPLOAD_FOLDER = 'uploads/'
@@ -93,7 +96,7 @@ def organize_by_thread(threads, address, emails):
     except Exception as e:
         print(f"Error in organize_by_thread: {e}")
 
-def calculate_user_response_times(threads, user_response_times_by_contact, median_response_times, user_email):
+def calculate_user_response_times(threads, user_response_times_by_contact, user_email):
     try:
         for contact, threadz in threads.items():
             for emails in threadz.values():
@@ -111,7 +114,6 @@ def calculate_user_response_times(threads, user_response_times_by_contact, media
 
         for contact, times in user_response_times_by_contact.items():
             if times:
-                median_response_times[contact] = np.median(times)
                 user_response_times_by_contact[contact] = sum(times) / len(times)
 
     except Exception as e:
@@ -312,7 +314,7 @@ def process_message(message, email_meta, email_content, contact_names, interacti
     except Exception as e:
         print(f"Error processing message: {e}")
 
-def generate_tabular_data(email_meta, email_content, contact_names, interaction_counts, invitation_counts, first_email_dates, last_email_dates, sentiment_scores, relationship_summaries, monthly_interactions, user_initiation, personalization_scores, follow_up_rates, keywords, contact_response_times, user_response_times_by_contact, median_response_times, user_email, thread_lengths):
+def generate_tabular_data(email_meta, email_content, contact_names, interaction_counts, invitation_counts, first_email_dates, last_email_dates, sentiment_scores, relationship_summaries, monthly_interactions, user_initiation, personalization_scores, follow_up_rates, keywords, contact_response_times, user_response_times_by_contact, user_email, thread_lengths):
     try:
         data = [{
             'contact': contact_names.get(contact, 'N/A'),
@@ -327,7 +329,6 @@ def generate_tabular_data(email_meta, email_content, contact_names, interaction_
             'follow_up_rate (%)': int(follow_up_rates.get(contact, 0)),
             "contact_response_time (hours)": round(contact_response_times.get(contact, 0), 2),
             'average_response_time (hours)': round(user_response_times_by_contact.get(contact, 0), 2),
-            # 'median_response_time (hours)': median_response_times.get(contact, 0),
             'average_email_chain_length': int(thread_lengths.get(contact, 0)),
             'keywords': keywords.get(contact, 'N/A'),
             'personalization_score': round(personalization_scores.get(contact, 0) / (sum(1 for email in email_meta.get(contact, []) if user_email in email['From']) or 1), 2)
@@ -349,7 +350,6 @@ def main(data, user_email, nlp):
         personalization_scores = defaultdict(int)
         user_response_times_by_contact = defaultdict(list)
         contact_response_times = defaultdict(list)
-        median_response_times = defaultdict(int)
         monthly_interactions = defaultdict(int)
         interaction_counts = defaultdict(int)
         invitation_counts = defaultdict(int)
@@ -379,14 +379,14 @@ def main(data, user_email, nlp):
             calculate_follow_up_rate(follow_up_rates, address, sorted_emails, user_email)
             user_initiated(user_initiation, address, sorted_emails, user_email)
         
-        calculate_user_response_times(threads, user_response_times_by_contact, median_response_times, user_email)
+        calculate_user_response_times(threads, user_response_times_by_contact, user_email)
         calculate_contact_response_times(threads, contact_response_times, user_email)
         calculate_thread_length(threads, thread_lengths)
         
         output_data = generate_tabular_data(
             email_meta, email_content, contact_names, interaction_counts, invitation_counts,
             first_email_dates, last_email_dates, sentiment_scores, relationship_summaries, monthly_interactions, user_initiation,
-            personalization_scores, follow_up_rates, keywords, contact_response_times, user_response_times_by_contact, median_response_times, user_email, thread_lengths
+            personalization_scores, follow_up_rates, keywords, contact_response_times, user_response_times_by_contact, user_email, thread_lengths
         )
 
         return output_data
@@ -531,26 +531,6 @@ def generate_plots(data):
         ]
 
         df_top_100 = df.sort_values(by='emails_exchanged', ascending=False).head(100)
-
-        # Histogram of Average Response Times
-        # plt.figure(figsize=(12, 6))
-        # sns.histplot(df_filtered['average_response_time (hours)'], bins=10, kde=True, color='blue')
-        # plt.title('Histogram of Average Response Times')
-        # plt.xlabel('Average Response Time (hours)')
-        # plt.ylabel('Frequency')
-        # plt.grid(True)
-        # plt.savefig('static/histogram_response_times.png')
-        # plt.close()
-
-        # Histogram of Personalization Scores
-        # plt.figure(figsize=(12, 6))
-        # sns.histplot(df_filtered['personalization_score'], bins=10, kde=True, color='green')
-        # plt.title('Histogram of Personalization Scores')
-        # plt.xlabel('Personalization Score')
-        # plt.ylabel('Frequency')
-        # plt.grid(True)
-        # plt.savefig('static/histogram_personalization_scores.png')
-        # plt.close()
 
         # Histogram of Number of Interactions
         plt.figure(figsize=(12, 6))
