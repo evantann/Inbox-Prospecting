@@ -95,12 +95,10 @@
                     document.getElementById('avg_sentiment_score').textContent = response.avg_sentiment_score;
                     document.getElementById('avg_personalization_score').textContent = response.avg_personalization_score;
 
-                    // Update plots
-                    document.getElementById('histogram_interaction').src = '/static/histogram_interactions.png';
-                    document.getElementById('pie_chart_sentiment_analysis').src = '/static/pie_chart_sentiment_analysis.png';
+                    document.getElementById('histogram_interaction').src = '/static/media/histogram_interactions.png';
+                    document.getElementById('pie_chart_sentiment_analysis').src = '/static/media/pie_chart_sentiment_analysis.png';
 
-                    // Fetch the HTML table and initialize DataTables
-                    const tableRequest = await fetch('/static/dataframe.html');
+                    const tableRequest = await fetch('/static/media/dataframe.html');
                     const tableHtml = await tableRequest.text();
                     document.querySelector('#dataframe-table').innerHTML = tableHtml;
 

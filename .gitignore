@@ -6,4 +6,8 @@
 
 /venv/
 
+/routes/__pycache__/
+
+static/media/
+
 .env

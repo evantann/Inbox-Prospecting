@@ -4,7 +4,6 @@ import spacy
 import torch
 import mailbox
 import matplotlib
-import numpy as np
 import pandas as pd
 import seaborn as sns
 import torch.nn.functional as F
@@ -13,16 +12,14 @@ from datetime import datetime
 from textblob import TextBlob
 from supabaseClient import client
 from collections import defaultdict, Counter
-from flask import Flask, render_template, request, jsonify
+from flask import render_template, request, jsonify, Blueprint, session
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
-
-app = Flask(__name__)
+analyze = Blueprint('analyze', __name__)
 
 matplotlib.use('Agg') # Required for matplotlib to work with Flask
 
 UPLOAD_FOLDER = 'uploads/'
-STATIC_FOLDER = 'static/'
 
 BLOCKED_CONTACTS = ['reply', 'support', 'notification', 'human resources', 'rewards', 'orders', 'alerts', 'talent', 'recruit', 'info', 'email', 'customer', 'account', 'admission', 'store', 'club', 'subscription', 'news', 'newsletter', 'product', 'updates', 'help', 'assistance', 'jury', 'careers', 'sale', 'response', 'guest', 'user', 'robot', 'confirm', 'automate', 'website', 'notice']
 
@@ -521,14 +518,9 @@ def extract_mbox(input_mbox, model, tokenizer):
         print(f'Error extracting mbox: {e}')
 
 
-def generate_plots(data):
+def generate_plots(data, user_email):
     try:
         df = pd.DataFrame(data)
-
-        df_filtered = df.loc[
-            (df['average_response_time (hours)'] > 0) &
-            (df['personalization_score'] > 0)
-        ]
 
         df_top_100 = df.sort_values(by='emails_exchanged', ascending=False).head(100)
 
@@ -539,20 +531,20 @@ def generate_plots(data):
         plt.xlabel('Number of Interactions')
         plt.ylabel('Frequency')
         plt.grid(True)
-        plt.savefig('static/histogram_interactions.png')
+        plt.savefig(f'static/media/histogram_interactions_{user_email}.png')
         plt.close()
 
-        # Pie Chart of Relationship Summary
+        # Pie Chart of Relationship Summary 
         sentiment_counts = df['relationship_summary'].value_counts()
         plt.figure(figsize=(8, 8))
         plt.pie(sentiment_counts, labels=sentiment_counts.index, autopct='%1.1f%%', colors=['#66c2a5', '#fc8d62', '#8da0cb'])
         plt.title('Sentiment Analysis Distribution')
-        plt.savefig('static/pie_chart_sentiment_analysis.png')
+        plt.savefig(f'static/media/pie_chart_sentiment_analysis_{user_email}.png')
         plt.close()
 
         html_table = df.to_html(index=False)
 
-        with open("static/dataframe.html", "w") as file:
+        with open(f"static/media/dataframe_{user_email}.html", "w") as file:
             file.write(html_table)
 
     except Exception as e:
@@ -585,47 +577,51 @@ def generate_summary(data):
 
     except Exception as e:
         print(f'Error generating summary: {e}')
+
+@analyze.route('/', methods=['GET', 'POST'])
+def process_inbox():
+    if request.method == 'POST':
+
+        file = request.files['mbox_file']
+        user_email = request.form['email']
+
+        if file:
+            file_path = os.path.join(UPLOAD_FOLDER, f'{user_email}.mbox')
+            file.save(file_path)
+
+        supabase = client()
+        admin_id = session.get('user_id')
+        
+        response = (
+            supabase.table("accounts")
+            .select("email")
+            .eq("email", user_email)
+            .execute()
+        )
+        print(response)
+
+        if not response.data:
+            create = (supabase.table("accounts")
+            .insert({"email": user_email, "admin_id": admin_id})
+            .execute()
+            )
+            print(create)
+        
+
+        nlp = spacy.load("en_core_web_sm")
+        model_name = "mrm8488/bert-tiny-finetuned-sms-spam-detection"
+        model = AutoModelForSequenceClassification.from_pretrained(model_name)
+        tokenizer = AutoTokenizer.from_pretrained(model_name)
+
+        data = extract_mbox(file_path, model, tokenizer)
+        
+        try:
+            obj = main(data, user_email, nlp)
+            generate_plots(obj, user_email)
+            summary = generate_summary(obj)
+            return jsonify(summary), 200
     
-@app.route('/')
-def index():
-    return render_template('index.html')
-
-@app.route('/analyze', methods=['POST'])
-def analyze():
-    app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-    app.config['STATIC_FOLDER'] = STATIC_FOLDER
-
-    upload_folder = app.config['UPLOAD_FOLDER']
-    static_folder = app.config['STATIC_FOLDER']
-    
-    os.makedirs(upload_folder, exist_ok=True)
-    os.makedirs(static_folder, exist_ok=True)
-
-    file = request.files['mbox_file']
-    user_email = request.form['email']
-
-    if file:
-        file_path = os.path.join(app.config['UPLOAD_FOLDER'], f'{user_email}.mbox')
-        file.save(file_path)
-
-    nlp = spacy.load("en_core_web_sm")
-    model_name = "mrm8488/bert-tiny-finetuned-sms-spam-detection"
-    model = AutoModelForSequenceClassification.from_pretrained(model_name)
-    tokenizer = AutoTokenizer.from_pretrained(model_name)
-
-    data = extract_mbox(file_path, model, tokenizer)
-    
-    try:
-        obj = main(data, user_email, nlp)
-        generate_plots(obj)
-        summary = generate_summary(obj)
-        return jsonify(summary), 200
-    
-    except Exception as e:
-        print(f'An error occurred at the analyze endpoint: {e}')
-        return jsonify({'error': 'An error occurred during analysis. Please try again.'}), 500
-
-if __name__ == '__main__':
-    app.run(debug=True)
-
-# unit tests, model tests
+        except Exception as e:
+            print(f'An error occurred at the analyze endpoint: {e}')
+            return jsonify({'error': 'An error occurred during analysis. Please try again.'}), 500
+    return render_template('analyze.html')

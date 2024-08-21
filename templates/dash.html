@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .sidebar {
+            height: 100%;
+            width: 0; /* Start with zero width */
+            position: fixed;
+            top: 0;
+            left: 0;
+            background-color: #111;
+            padding-top: 20px;
+            overflow-x: hidden; /* Hide horizontal scrollbar */
+            transition: 0.5s; /* Smooth transition */
+        }
+        .sidebar a {
+            padding: 8px 16px;
+            text-decoration: none;
+            font-size: 18px;
+            color: #f1f1f1;
+            display: block;
+            transition: 0.3s;
+        }
+        .sidebar a:hover {
+            background-color: #575757;
+        }
+        .openbtn {
+            font-size: 20px;
+            cursor: pointer;
+            background-color: #111;
+            color: #f1f1f1;
+            padding: 10px;
+            border: none;
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            z-index: 1;
+        }
+        .openbtn:hover {
+            background-color: #575757;
+        }
+        .content {
+            transition: margin-left 0.5s; /* Smooth transition */
+            margin-left: 0;
+            padding: 16px;
+        }
+        #plots-container img {
+            max-width: 100%;
+            height: auto;
+        }
+        .sidebar .bottom-btn {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            padding: 10px 0;
+            background-color: #111;
+            border-top: 1px solid #575757;
+        }
+        .sidebar .bottom-btn a {
+            background-color: #575757;
+            color: #f1f1f1;
+            padding: 10px 16px;
+            border-radius: 5px;
+            display: inline-block;
+            text-decoration: none;
+        }
+        .sidebar .bottom-btn a:hover {
+            background-color: #333;
+        }
+    </style>
+</head>
+<body>
+
+    <button class="openbtn" onclick="toggleSidebar()">☰ Open</button>
+
+    <div id="mySidebar" class="sidebar">
+        <p style="display: block;">placeholder</p>
+        {% for account in accounts %}
+            <a href="{{ url_for('dash.dashboard', email=account.email) }}">{{ account.email }}</a>
+        {% endfor %}
+        <div class="bottom-btn">
+            <a href="{{ url_for('analyze.process_inbox') }}">Add New Inbox</a>
+        </div>
+    </div>
+
+    <div class="content">
+        {% if email %}
+        <div id="plots-container">
+            <img src="{{ url_for('static', filename='media/histogram_interactions_' + email + '.png') }}" id="histogram_interaction" alt="Interaction Distribution">
+            <img src="{{ url_for('static', filename='media/pie_chart_sentiment_analysis_' + email + '.png') }}" id="pie_chart_sentiment_analysis" alt="Pie Chart of Sentiment Analysis">
+        </div>
+        {% endif %}
+
+        <div id="dataframe">
+            <h2>Table</h2>
+            <table id="dataframe-table" class="display"></table>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('mySidebar');
+            const content = document.querySelector('.content');
+            if (sidebar.style.width === '0px' || sidebar.style.width === '') {
+                sidebar.style.width = '250px';
+                content.style.marginLeft = '250px';
+            } else {
+                sidebar.style.width = '0';
+                content.style.marginLeft = '0';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            async function loadTable() {
+                const email = "{{ email }}";
+                if (!email) {
+                    console.error('Email is not defined.');
+                    return;
+                }
+
+                try {
+                    const tableRequest = await fetch(`/static/media/dataframe_${email}.html`);
+                    if (!tableRequest.ok) {
+                        throw new Error('Network response was not ok.');
+                    }
+                    const tableHtml = await tableRequest.text();
+                    document.querySelector('#dataframe-table').innerHTML = tableHtml;
+
+                    $('#dataframe-table').DataTable();
+                } catch (error) {
+                    alert('Error: ' + error.message);
+                }
+            }
+
+            loadTable();
+        });
+    </script>
+</body>
+</html>
