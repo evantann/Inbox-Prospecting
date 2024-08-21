@@ -37,10 +37,14 @@ def register():
                 'email': email,
                 'password': password
             })
-            print(response)
             if response.user:
                 return redirect(url_for('users.login'))
         except Exception as e:
             print(e)
             return render_template('register.html', error=e)
-    return render_template('register.html') 
+    return render_template('register.html')
+
+@users.route('/logout')
+def logout():
+    session.pop('user_id', None)
+    return redirect(url_for('users.login'))

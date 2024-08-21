@@ -4,11 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='sign.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/sign.css') }}">
 </head>
 <body>
     <div class="container">
         <h2>Register</h2>
+        {% if error %}
+            <p style="color: red;">{{ error }}</p>
+            {% endif %}
         <form action="{{ url_for('users.register') }}" method="POST">
             <div class="form-group">
                 <label for="email">Email:</label>

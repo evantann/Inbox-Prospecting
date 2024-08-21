@@ -1,113 +1,52 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inbox Analysis</title>
-    <link rel="stylesheet" href="{{url_for ('static', filename='styles.css')}}">
-</head>
-<body>
-    <h1>Welcome to the Inbox Analysis Tool</h1>
-    <form id="uploadForm" enctype="multipart/form-data">
-        <label for="email">Enter your email address:</label>
-        <input type="email" id="email" name="email" required>
-        
-        <label for="mbox_file">Upload your .mbox file:</label>
-        <input type="file" id="mbox_file" name="mbox_file" required>
-        
-        <button type="submit">Process Emails</button>
-    </form>
+    {% extends "nav.html" %}
 
-    <div id="loading">
-        <div>
-            <p>Processing your file...</p>
-            <div class="spinner"></div>
+    {% block styles %}
+        <link rel="stylesheet" href="{{url_for ('static', filename='css/upload.css')}}">
+    {% endblock %}
+
+    {% block content %}
+        <h1>Upload Your Inbox</h1>
+        <form id="uploadForm" enctype="multipart/form-data">
+            <label for="email">Enter your email address:</label>
+            <input type="email" id="email" name="email" required>
+            
+            <label for="mbox_file">Upload your .mbox file:</label>
+            <input type="file" id="mbox_file" name="mbox_file" required>
+            
+            <button type="submit" class="submit-button">Process Emails</button>
+        </form>
+
+        <div id="loading">
+            <div>
+                <p>Processing your file...</p>
+                <div class="spinner"></div>
+            </div>
         </div>
-    </div>
 
-    <div id="summary-container">
-        <div class="summary-box">
-            <h2>Number of initiations</h2>
-            <p id="num_initiations"></p>
-        </div>
-        <div class="summary-box">
-            <h2>Total number of emails exchanged</h2>
-            <p id="num_emails"></p>
-        </div>
-        <div class="summary-box">
-            <h2>Average number of interactions per month</h2>
-            <p id="avg_emails_per_month"></p>
-        </div>
-        <div class="summary-box">
-            <h2>Average response time (hours)</h2>
-            <p id="avg_response_time"></p>
-        </div>
-        <div class="summary-box">
-            <h2>Average sentiment score</h2>
-            <p id="avg_sentiment_score"></p>
-        </div>
-        <div class="summary-box">
-            <h2>Average personalization score</h2>
-            <p id="avg_personalization_score"></p>
-        </div>
-    </div>
+        <script>
+            document.getElementById('uploadForm').addEventListener('submit', async function(event) {
+                event.preventDefault();
+                const formData = new FormData(this);
 
-    <div id="plots-container">
-        <img id="histogram_interaction" alt="Interaction Distribution">
-        <img id="pie_chart_sentiment_analysis" alt="Pie Chart of Sentiment Analysis">
-    </div>
+                document.getElementById('loading').style.display = 'block';
 
-    <div id="dataframe">
-        <h2>Table</h2>
-        <table id="dataframe-table" class="display">
-        </table>
-    </div>
-
-    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
-
-    <script>
-        document.getElementById('uploadForm').addEventListener('submit', async function(event) {
-            event.preventDefault();
-            const formData = new FormData(this);
-
-            document.getElementById('loading').style.display = 'block';
-            document.getElementById('uploadForm').style.display = 'none';
-
-            try {
-                const request = await fetch('/analyze', {
-                    method: 'POST',
-                    body: formData
-                });
-                
-                const response = await request.json();
-                
-                if (response.error) { 
-                    alert('Error processing emails: ' + response.error);
-                } else {
-                    document.getElementById('loading').style.display = 'none';
-
-                    document.getElementById('num_initiations').textContent = response.num_initiations;
-                    document.getElementById('num_emails').textContent = response.total_emails_exchanged;
-                    document.getElementById('avg_emails_per_month').textContent = response.avg_emails_per_month;
-                    document.getElementById('avg_response_time').textContent = response.avg_response_time;
-                    document.getElementById('avg_sentiment_score').textContent = response.avg_sentiment_score;
-                    document.getElementById('avg_personalization_score').textContent = response.avg_personalization_score;
-
-                    document.getElementById('histogram_interaction').src = '/static/media/histogram_interactions.png';
-                    document.getElementById('pie_chart_sentiment_analysis').src = '/static/media/pie_chart_sentiment_analysis.png';
-
-                    const tableRequest = await fetch('/static/media/dataframe.html');
-                    const tableHtml = await tableRequest.text();
-                    document.querySelector('#dataframe-table').innerHTML = tableHtml;
-
-                    $('#dataframe-table').DataTable();
+                try {
+                    const request = await fetch('/analyze', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    const response = await request.json();
+                    
+                    if (response.error) { 
+                        alert('Error processing emails: ' + response.error);
+                    } else {
+                        document.getElementById('loading').style.display = 'none';
+                        // window.location.href = '/dashboard';
+                    }
+                } catch (error) {
+                    alert('Error: ' + error.message);
                 }
-            } catch (error) {
-                alert('Error: ' + error.message);
-            }
-        });
-    </script>
-</body>
-</html>
+            });
+        </script>
+    {% endblock %}

@@ -11,7 +11,7 @@ def index():
 
     query = (
         supabase.table("accounts")
-        .select("email", "admin_id")
+        .select("email")
         .eq("admin_id", user_id)
         .execute()
     )
@@ -20,7 +20,7 @@ def index():
 
     return render_template('dash.html', accounts=accounts)
 
-@dash.route('/<email>')
+@dash.route('/<email>') 
 def dashboard(email):
     user_id = session.get('user_id')
 

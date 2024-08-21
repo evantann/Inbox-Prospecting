@@ -511,7 +511,6 @@ def extract_mbox(input_mbox, model, tokenizer):
                 email_dict['Body'] = payload
                 processed_messages.append(email_dict)
 
-
         return processed_messages
     
     except Exception as e:
@@ -580,6 +579,8 @@ def generate_summary(data):
 
 @analyze.route('/', methods=['GET', 'POST'])
 def process_inbox():
+    supabase = client()
+    admin_id = session.get('user_id')
     if request.method == 'POST':
 
         file = request.files['mbox_file']
@@ -589,25 +590,27 @@ def process_inbox():
             file_path = os.path.join(UPLOAD_FOLDER, f'{user_email}.mbox')
             file.save(file_path)
 
-        supabase = client()
-        admin_id = session.get('user_id')
-        
         response = (
             supabase.table("accounts")
-            .select("email")
+            .select("id")
             .eq("email", user_email)
+            .eq("admin_id", admin_id)
             .execute()
         )
-        print(response)
 
         if not response.data:
-            create = (supabase.table("accounts")
+            (supabase.table("accounts")
             .insert({"email": user_email, "admin_id": admin_id})
             .execute()
             )
-            print(create)
         
-
+        inbox_id = (
+            supabase.table("accounts")
+            .select("id")
+            .eq("email", user_email)
+            .execute()
+        )
+        
         nlp = spacy.load("en_core_web_sm")
         model_name = "mrm8488/bert-tiny-finetuned-sms-spam-detection"
         model = AutoModelForSequenceClassification.from_pretrained(model_name)
@@ -624,4 +627,15 @@ def process_inbox():
         except Exception as e:
             print(f'An error occurred at the analyze endpoint: {e}')
             return jsonify({'error': 'An error occurred during analysis. Please try again.'}), 500
-    return render_template('analyze.html')
+        
+    user_id = session.get('user_id')
+
+    query = (
+        supabase.table("accounts")
+        .select("email")
+        .eq("admin_id", user_id)
+        .execute()
+    )
+
+    accounts = query.data
+    return render_template('analyze.html', accounts=accounts)

@@ -1,0 +1,87 @@
+body {
+    font-family: Arial, sans-serif;
+}
+.sidebar {
+    height: 100%;
+    width: 0;
+    position: fixed;
+    top: 0;
+    left: 0;
+    background-color: #111;
+    padding-top: 20px;
+    overflow-x: hidden;
+    transition: 0.5s;
+}
+.sidebar a {
+    padding: 8px 16px;
+    text-decoration: none;
+    font-size: 18px;
+    color: #f1f1f1;
+    display: block;
+    transition: 0.3s;
+}
+.sidebar a:hover {
+    background-color: #575757;
+}
+.openbtn {
+    font-size: 20px;
+    cursor: pointer;
+    background-color: #111;
+    color: #f1f1f1;
+    padding: 10px;
+    border: none;
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    z-index: 1;
+}
+.openbtn:hover {
+    background-color: #575757;
+}
+.content {
+    transition: margin-left 0.5s;
+    margin-left: 0;
+    padding: 16px;
+}
+#plots-container img {
+    max-width: 100%;
+    height: auto;
+}
+.sidebar .bottom-btn {
+    position: absolute;
+    bottom: 20px;
+    left: 0;
+    width: 100%;
+    text-align: center;
+    padding: 10px 0;
+    background-color: #111;
+    border-top: 1px solid #575757;
+}
+.sidebar .bottom-btn a {
+    background-color: #575757;
+    color: #f1f1f1;
+    padding: 10px 16px;
+    border-radius: 5px;
+    display: inline-block;
+    text-decoration: none;
+}
+.sidebar .bottom-btn a:hover {
+    background-color: #333;
+}
+
+.navbar {
+    background-color: white;
+    padding: 10px 20px;
+}
+
+.navbar .navbar-nav .nav-link {
+    color: #f1f1f1;
+    font-size: 18px;
+    padding: 8px 16px;
+    transition: 0.3s;
+}
+
+.navbar .navbar-nav .nav-link:hover {
+    background-color: #575757;
+    color: #f1f1f1;
+}
