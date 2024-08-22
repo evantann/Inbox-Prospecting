@@ -1,4 +1,5 @@
 import os
+import pandas as pd
 from dash import Dash, dcc, html, dash_table
 from dash.dependencies import Input, Output
 from flask import Flask, redirect, url_for, session, render_template
@@ -53,23 +54,23 @@ dash_app.layout = html.Div([
         ]),
     ]),
 
-    # Section to display plots
-    html.Div(id='plots-container', children=[
-        html.Img(id='histogram_interaction', alt='Interaction Distribution'),
-        html.Img(id='pie_chart_sentiment_analysis', alt='Pie Chart of Sentiment Analysis')
-    ]),
+    # # Section to display plots
+    # html.Div(id='plots-container', children=[
+    #     html.Img(id='histogram_interaction', alt='Interaction Distribution'),
+    #     html.Img(id='pie_chart_sentiment_analysis', alt='Pie Chart of Sentiment Analysis')
+    # ]),
 
-    # Data table for detailed information
-    html.Div(id='dataframe', children=[
-        html.H2('Table'),
-        dash_table.DataTable(
-            id='dataframe-table',
-            columns=[
-                {"name": "Field", "id": "field"},
-                {"name": "Value", "id": "value"}
-            ]
-        )
-    ]),
+    # # Data table for detailed information
+    # html.Div(id='dataframe', children=[
+    #     html.H2('Table'),
+    #     dash_table.DataTable(
+    #         id='dataframe-table',
+    #         columns=[
+    #             {"name": "Field", "id": "field"},
+    #             {"name": "Value", "id": "value"}
+    #         ]
+    #     )
+    # ]),
 ])
 
 # Dash app callback for updating the dashboard
@@ -81,16 +82,15 @@ dash_app.layout = html.Div([
      Output('avg_response_time', 'children'),
      Output('avg_sentiment_score', 'children'),
      Output('avg_personalization_score', 'children'),
-     Output('histogram_interaction', 'src'),
-     Output('pie_chart_sentiment_analysis', 'src'),
-     Output('dataframe-table', 'data')],
+    #  Output('histogram_interaction', 'src'),
+    #  Output('pie_chart_sentiment_analysis', 'src'),
+    #  Output('dataframe-table', 'data')],
+    ],
     [Input('url', 'pathname')]
 )
 def update_dashboard(pathname):
     account_id = pathname.split('/')[-2]
 
-    print(account_id)
-    # Sample data object from the query
     data_query = (
         supabase.table("analysis")
         .select("*")
@@ -99,20 +99,33 @@ def update_dashboard(pathname):
     )
 
     data = data_query.data
-    print(data)
+    df = pd.DataFrame(data)
+    print(df)
+    df_filtered = df.loc[
+    (df['user_avg_response_time (hours)'] > 0) &
+    (df['personalization_score'] > 0)
+    ]
+
+    num_contacts_user_initiated_true = int(df['user_initiated'].sum())
+    average_response_time = round(df_filtered['user_avg_response_time (hours)'].mean(), 2)
+    total_emails_exchanged = int(df['emails_exchanged'].sum())
+    average_sentiment_score = round(df['sentiment_score'].mean(), 2)
+    average_personalization_score = round(df_filtered['personalization_score'].mean(), 2)
+    average_emails_per_month = round(df['interaction_frequency (emails per month)'].mean(), 2)
 
     title = f'Dashboard for Account {account_id}'
 
     return (title,
-            data['num_initiations'],
-            data['num_emails'],
-            data['avg_emails_per_month'],
-            data['avg_response_time'],
-            data['avg_sentiment_score'],
-            data['avg_personalization_score'],
-            data['histogram_interaction_src'],
-            data['pie_chart_sentiment_analysis_src'],
-            data['dataframe_data'])
+            num_contacts_user_initiated_true,
+            total_emails_exchanged,
+            average_emails_per_month,
+            average_response_time,
+            average_sentiment_score,
+            average_personalization_score,
+            # df['histogram_interaction_src'],
+            # df['pie_chart_sentiment_analysis_src'],
+            # df['dataframe_data']
+            )
 
 # Route to dashboard
 @app.route('/dashboard/<account_id>')
@@ -120,6 +133,7 @@ def dashboard(account_id):
 
     dash_url = f"/dash/{account_id}/"
     user_id = session.get('user_id')
+    print("This is the session", session)
 
     accounts_query = (
         supabase.table("accounts")

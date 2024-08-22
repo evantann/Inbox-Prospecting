@@ -645,10 +645,11 @@ def process_inbox():
 
     query = (
         supabase.table("accounts")
-        .select("email")
+        .select("email", "id")
         .eq("admin_id", user_id)
         .execute()
     )
 
     accounts = query.data
+    
     return render_template('upload.html', accounts=accounts)
