@@ -1,11 +1,12 @@
 import os
 import pandas as pd
+import plotly.express as px
 from dash import Dash, dcc, html, dash_table
 from dash.dependencies import Input, Output
+import dash_bootstrap_components as dbc
 from flask import Flask, redirect, url_for, session, render_template
 from routes.users import users
 from routes.analyze import analyze
-# from routes.dashboard import dashboard
 from supabaseClient import client
 
 app = Flask(__name__)
@@ -14,106 +15,181 @@ app.config['SECRET_KEY'] = os.urandom(24)
 # Register blueprints
 app.register_blueprint(users, url_prefix='/users')
 app.register_blueprint(analyze, url_prefix='/analyze')
-# app.register_blueprint(dashboard, url_prefix='/dashboard')  
 
 supabase = client()
 
-# Initialize Dash app
-dash_app = Dash(__name__, server=app, url_base_pathname='/dash/')
+# Initialize Dash app with a Bootstrap theme
+dash_app = Dash(__name__, server=app, url_base_pathname='/dash/', external_stylesheets=[dbc.themes.BOOTSTRAP])
 
-# Updated Dash app layout
-dash_app.layout = html.Div([
+# Custom styles
+custom_css = {
+    "card": {
+        "borderRadius": "10px",
+        "boxShadow": "0 4px 8px 0 rgba(0, 0, 0, 0.2)",
+    },
+    "card-title": {
+        "fontSize": "1.25rem",
+        "fontWeight": "bold",
+    },
+    "card-text": {
+        "fontSize": "1rem",
+        "color": "#495057",
+    },
+    "container": {
+        "backgroundColor": "#f8f9fa",
+        "padding": "20px",
+        "borderRadius": "15px",
+    },
+    "title": {
+        "color": "#343a40",
+    },
+}
+
+# Updated Dash app layout with summary boxes fitting on one line
+dash_app.layout = dbc.Container([
     dcc.Location(id='url', refresh=False),  # To capture the URL
-    html.H1(id='dashboard-title'),
-    
-    # Section to display summary information
-    html.Div(id='summary-container', children=[
-        html.Div(className='summary-box', children=[
-            html.H2('Number of Initiations'),
-            html.P(id='num_initiations')
-        ]),
-        html.Div(className='summary-box', children=[
-            html.H2('Total Number of Emails Exchanged'),
-            html.P(id='num_emails')
-        ]),
-        html.Div(className='summary-box', children=[
-            html.H2('Average Number of Interactions per Month'),
-            html.P(id='avg_emails_per_month')
-        ]),
-        html.Div(className='summary-box', children=[
-            html.H2('Average Response Time (hours)'),
-            html.P(id='avg_response_time')
-        ]),
-        html.Div(className='summary-box', children=[
-            html.H2('Average Sentiment Score'),
-            html.P(id='avg_sentiment_score')
-        ]),
-        html.Div(className='summary-box', children=[
-            html.H2('Average Personalization Score'),
-            html.P(id='avg_personalization_score')
-        ]),
+    dbc.Row([
+        dbc.Col(html.H1(id='dashboard-title', className='text-center my-4', style=custom_css["title"]), width=12)
     ]),
+    
+    # Section to display summary information (fit on one line)
+    dbc.Row(id='summary-container', children=[
+        dbc.Col(className='summary-box', children=[
+            dbc.Card([
+                dbc.CardBody([
+                    html.H5('Number of Initiations', className='card-title', style=custom_css["card-title"]),
+                    html.P(id='num_initiations', className='card-text', style=custom_css["card-text"])
+                ])
+            ], className='shadow-sm mb-4', style=custom_css["card"]),
+        ], width=2),  # Set width to 2 out of 12
+        dbc.Col(className='summary-box', children=[
+            dbc.Card([
+                dbc.CardBody([
+                    html.H5('Total Number of Emails Exchanged', className='card-title', style=custom_css["card-title"]),
+                    html.P(id='num_emails', className='card-text', style=custom_css["card-text"])
+                ])
+            ], className='shadow-sm mb-4', style=custom_css["card"]),
+        ], width=2),  # Set width to 2 out of 12
+        dbc.Col(className='summary-box', children=[
+            dbc.Card([
+                dbc.CardBody([
+                    html.H5('Average Interactions per Month', className='card-title', style=custom_css["card-title"]),
+                    html.P(id='avg_emails_per_month', className='card-text', style=custom_css["card-text"])
+                ])
+            ], className='shadow-sm mb-4', style=custom_css["card"]),
+        ], width=2),  # Set width to 2 out of 12
+        dbc.Col(className='summary-box', children=[
+            dbc.Card([
+                dbc.CardBody([
+                    html.H5('Average Response Time (hours)', className='card-title', style=custom_css["card-title"]),
+                    html.P(id='avg_response_time', className='card-text', style=custom_css["card-text"])
+                ])
+            ], className='shadow-sm mb-4', style=custom_css["card"]),
+        ], width=2),  # Set width to 2 out of 12
+        dbc.Col(className='summary-box', children=[
+            dbc.Card([
+                dbc.CardBody([
+                    html.H5('Average Sentiment Score', className='card-title', style=custom_css["card-title"]),
+                    html.P(id='avg_sentiment_score', className='card-text', style=custom_css["card-text"])
+                ])
+            ], className='shadow-sm mb-4', style=custom_css["card"]),
+        ], width=2),  # Set width to 2 out of 12
+        dbc.Col(className='summary-box', children=[
+            dbc.Card([
+                dbc.CardBody([
+                    html.H5('Average Personalization Score', className='card-title', style=custom_css["card-title"]),
+                    html.P(id='avg_personalization_score', className='card-text', style=custom_css["card-text"])
+                ])
+            ], className='shadow-sm mb-4', style=custom_css["card"]),
+        ], width=2),  # Set width to 2 out of 12
+    ], style=custom_css["container"]),
+    
+    # Row for the histogram, pie chart, and data table
+    dbc.Row([
+        dbc.Col(dcc.Graph(id='emails_histogram'), width=6),
+        dbc.Col(dcc.Graph(id='sentiment_pie_chart'), width=6),
+    ], style=custom_css["container"]),
 
-    # # Section to display plots
-    # html.Div(id='plots-container', children=[
-    #     html.Img(id='histogram_interaction', alt='Interaction Distribution'),
-    #     html.Img(id='pie_chart_sentiment_analysis', alt='Pie Chart of Sentiment Analysis')
-    # ]),
+    # Data Table with index column, search, and sort functionality
+    dbc.Row([
+        dbc.Col(dash_table.DataTable(
+            id='data_table',
+            columns=[],  # Columns will be set in the callback
+            data=[],     # Data will be set in the callback
+            filter_action='native',  # Enables search functionality
+            sort_action='native',    # Enables sort functionality
+            sort_mode='multi',       # Enables multi-column sorting
+            style_table={'overflowX': 'auto'},
+            style_header={'backgroundColor': 'rgb(230, 230, 230)', 'fontWeight': 'bold'},
+            style_cell={'textAlign': 'left', 'padding': '5px', 'whiteSpace': 'normal', 'height': 'auto'}
+        ), width=12),
+    ], style=custom_css["container"]),
 
-    # # Data table for detailed information
-    # html.Div(id='dataframe', children=[
-    #     html.H2('Table'),
-    #     dash_table.DataTable(
-    #         id='dataframe-table',
-    #         columns=[
-    #             {"name": "Field", "id": "field"},
-    #             {"name": "Value", "id": "value"}
-    #         ]
-    #     )
-    # ]),
-])
+], fluid=True)
 
 # Dash app callback for updating the dashboard
-@dash_app.callback(
-    [Output('dashboard-title', 'children'),
-     Output('num_initiations', 'children'),
-     Output('num_emails', 'children'),
-     Output('avg_emails_per_month', 'children'),
-     Output('avg_response_time', 'children'),
-     Output('avg_sentiment_score', 'children'),
-     Output('avg_personalization_score', 'children'),
-    #  Output('histogram_interaction', 'src'),
-    #  Output('pie_chart_sentiment_analysis', 'src'),
-    #  Output('dataframe-table', 'data')],
-    ],
+@dash_app.callback([
+    Output('dashboard-title', 'children'),
+    Output('num_initiations', 'children'),
+    Output('num_emails', 'children'),
+    Output('avg_emails_per_month', 'children'),
+    Output('avg_response_time', 'children'),
+    Output('avg_sentiment_score', 'children'),
+    Output('avg_personalization_score', 'children'),
+    Output('emails_histogram', 'figure'),
+    Output('sentiment_pie_chart', 'figure'),
+    Output('data_table', 'columns'),
+    Output('data_table', 'data')],
     [Input('url', 'pathname')]
 )
 def update_dashboard(pathname):
     account_id = pathname.split('/')[-2]
 
-    data_query = (
-        supabase.table("analysis")
-        .select("*")
-        .eq("account_id", account_id)
-        .execute()
-    )
-
+    # Fetch data from Supabase
+    data_query = supabase.table("analysis").select("*").eq("account_id", account_id).execute()
     data = data_query.data
+
     df = pd.DataFrame(data)
-    print(df)
-    df_filtered = df.loc[
-    (df['user_avg_response_time (hours)'] > 0) &
-    (df['personalization_score'] > 0)
+
+    # Add an index column
+    df['Index'] = df.index + 1
+
+    # Reorder the columns to place the index at the beginning
+    df = df[['Index'] + [col for col in df.columns if col != 'Index']]
+
+    # Filter out unwanted columns (account_id, id)
+    df_filtered = df.drop(columns=['account_id', 'id'])
+
+    # Prepare the table data
+    table_columns = [{"name": i, "id": i} for i in df_filtered.columns]
+    table_data = df_filtered.to_dict('records')
+
+    # Filtered data for specific analyses
+    df_filtered_stats = df.loc[
+        (df['user_avg_response_time (hours)'] > 0) &
+        (df['personalization_score'] > 0)
     ]
 
-    num_contacts_user_initiated_true = int(df['user_initiated'].sum())
-    average_response_time = round(df_filtered['user_avg_response_time (hours)'].mean(), 2)
-    total_emails_exchanged = int(df['emails_exchanged'].sum())
-    average_sentiment_score = round(df['sentiment_score'].mean(), 2)
-    average_personalization_score = round(df_filtered['personalization_score'].mean(), 2)
-    average_emails_per_month = round(df['interaction_frequency (emails per month)'].mean(), 2)
+    df_top_100 = df.sort_values(by='emails_exchanged', ascending=False).head(100)
+    fig_histogram = px.histogram(df_top_100, x='emails_exchanged', nbins=20, title='Distribution of Emails Exchanged')
+
+    # Create sentiment analysis pie chart
+    sentiment_counts = df['relationship_summary'].value_counts()
+    fig_pie_chart = px.pie(
+        sentiment_counts, 
+        values=sentiment_counts.values, 
+        names=sentiment_counts.index, 
+        title='Sentiment Analysis Distribution'
+    )
 
     title = f'Dashboard for Account {account_id}'
+
+    num_contacts_user_initiated_true = int(df['user_initiated'].sum())
+    average_response_time = round(df_filtered_stats['user_avg_response_time (hours)'].mean(), 2)
+    total_emails_exchanged = int(df['emails_exchanged'].sum())
+    average_sentiment_score = round(df['sentiment_score'].mean(), 2)
+    average_personalization_score = round(df_filtered_stats['personalization_score'].mean(), 2)
+    average_emails_per_month = round(df['interaction_frequency (emails per month)'].mean(), 2)
 
     return (title,
             num_contacts_user_initiated_true,
@@ -122,18 +198,16 @@ def update_dashboard(pathname):
             average_response_time,
             average_sentiment_score,
             average_personalization_score,
-            # df['histogram_interaction_src'],
-            # df['pie_chart_sentiment_analysis_src'],
-            # df['dataframe_data']
-            )
+            fig_histogram,
+            fig_pie_chart,
+            table_columns,
+            table_data)
 
 # Route to dashboard
 @app.route('/dashboard/<account_id>')
 def dashboard(account_id):
-
     dash_url = f"/dash/{account_id}/"
     user_id = session.get('user_id')
-    print("This is the session", session)
 
     accounts_query = (
         supabase.table("accounts")
