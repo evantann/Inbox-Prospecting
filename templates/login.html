@@ -9,9 +9,7 @@
 <body>
     <div class="container">
         <h2>Login</h2>
-        {% if error %}
-            <p>{{ error }}</p>
-        {% endif %}
+        <p>{{ error }}</p>
         <form action="{{ url_for('users.login') }}" method="POST">
             <div class="form-group">
                 <label for="email">Email:</label>

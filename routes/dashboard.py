@@ -1,36 +1,46 @@
 from supabaseClient import client
-from flask import Blueprint, render_template, request, redirect, url_for, jsonify, session
+from flask import Blueprint, render_template, session
 
-dash = Blueprint('dash', __name__)
+dashboard = Blueprint('dashboard', __name__)
 
 supabase = client()
 
-@dash.route('/')
+@dashboard.route('/')
 def index():
     user_id = session.get('user_id')
 
     query = (
         supabase.table("accounts")
-        .select("email")
+        .select("email", "id")
         .eq("admin_id", user_id)
         .execute()
     )
 
     accounts = query.data
 
-    return render_template('dash.html', accounts=accounts)
+    return render_template('dashboard.html', accounts=accounts)
 
-@dash.route('/<email>') 
-def dashboard(email):
+@dashboard.route('/<account_id>') 
+def render_dashboard(account_id):
+
     user_id = session.get('user_id')
 
     query = (
         supabase.table("accounts")
-        .select("email", "admin_id")
+        .select("email", "id")
         .eq("admin_id", user_id)
         .execute()
     )
 
-    accounts = query.data
+    data = (
+        supabase.table("analysis")
+        .select("*")
+        .eq("account_id", account_id)
+        .execute()
+    )
 
-    return render_template('dash.html', email=email, accounts=accounts)
+    accounts = query.data
+    data = data.data
+    dash_url = f"/dash/{account_id}/"
+
+    return render_template('dashboard.html', accounts=accounts, data=data, dash_url=dash_url)

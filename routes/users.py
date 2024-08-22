@@ -19,7 +19,7 @@ def login():
             if response.user:
                 user_id = response.user.id
                 session['user_id'] = user_id
-                return redirect(url_for('dash.index'))
+                return redirect(url_for('dashboard.index'))
 
         except Exception as e:
             print(e)

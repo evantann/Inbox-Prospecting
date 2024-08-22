@@ -30,7 +30,7 @@
     <div id="mySidebar" class="sidebar">
         <p style="display: block;">placeholder</p>
         {% for account in accounts %}
-            <a href="{{ url_for('dash.dashboard', email=account.email) }}">{{ account.email }}</a>
+            <a href="{{ url_for('dashboard.render_dashboard', account_id=account.id) }}">{{ account.email }}</a>
         {% endfor %}
         <div class="bottom-btn">
             <a href="{{ url_for('analyze.process_inbox') }}">Add New Inbox</a>
