@@ -19,11 +19,11 @@ def login():
             if response.user:
                 user_id = response.user.id
                 session['user_id'] = user_id
-                return redirect(url_for('dashboard.index'))
+                return redirect(url_for('index'))
 
         except Exception as e:
             print(e)
-            return render_template('login.html', error=e)
+            return render_template('login.html', error=str(e))
     return render_template('login.html')
 
 @users.route('/register', methods=['GET', 'POST'])

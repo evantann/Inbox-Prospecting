@@ -18,3 +18,12 @@ pip install icalendar
 3. run email_sentiment_analysis.py to get email_sentiment_analysis.csv file
 4. download the user's google calendar .ics file and provide the user's email address and email_sentiment_analysis.csv file name in email_calendar_data_agent.py
 5. run email_calendar_data_agent.py to get one_on_one meetings.csv
+
+# Challenges
+Problem: Dash runs its own web server.
+
+1. Doesn't natively work with Jinja templates.
+2. Had to create individual dash apps for each user.
+3. Dash apps had to be created before the Flask server processed any request (no dynamic dashboards).
+
+Iframes resolved 1. Using callbacks solved 2, 3.

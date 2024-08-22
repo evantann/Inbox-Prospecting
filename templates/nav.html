@@ -16,7 +16,7 @@
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav ml-auto">
                 <li class="nav-item">
-                    <a class="nav-link" href="/dash">Dashboard</a>
+                    <a class="nav-link" href="/dashboard">Dashboard</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="/users/logout">Logout</a>
@@ -29,9 +29,9 @@
 
     <div id="mySidebar" class="sidebar">
         <p style="display: block;">placeholder</p>
-        {% for account in accounts %}
-            <a href="{{ url_for('dashboard.render_dashboard', account_id=account.id) }}">{{ account.email }}</a>
-        {% endfor %}
+            {% for account in accounts %}
+                <a href="{{ url_for('dashboard', account_id=account['id']) }}">{{ account['email'] }}</a>
+            {% endfor %}
         <div class="bottom-btn">
             <a href="{{ url_for('analyze.process_inbox') }}">Add New Inbox</a>
         </div>

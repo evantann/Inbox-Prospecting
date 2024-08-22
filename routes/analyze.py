@@ -638,4 +638,4 @@ def process_inbox():
     )
 
     accounts = query.data
-    return render_template('analyze.html', accounts=accounts)
+    return render_template('upload.html', accounts=accounts)
