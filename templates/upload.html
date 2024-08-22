@@ -1,52 +1,54 @@
-    {% extends "nav.html" %}
+{% extends "nav.html" %}
 
-    {% block styles %}
-        <link rel="stylesheet" href="{{url_for ('static', filename='css/upload.css')}}">
-    {% endblock %}
+{% block styles %}
+    <link rel="stylesheet" href="{{url_for ('static', filename='css/upload.css')}}">
+{% endblock %}
 
-    {% block content %}
-        <h1>Upload Your Inbox</h1>
-        <form id="uploadForm" enctype="multipart/form-data">
-            <label for="email">Enter your email address:</label>
-            <input type="email" id="email" name="email" required>
-            
-            <label for="mbox_file">Upload your .mbox file:</label>
-            <input type="file" id="mbox_file" name="mbox_file" required>
-            
-            <button type="submit" class="submit-button">Process Emails</button>
-        </form>
+{% block content %}
+    <h1>Upload Your Inbox</h1>
+    <p id="success-message"></p>
+    <form id="uploadForm" enctype="multipart/form-data">
+        <label for="email">Enter your email address:</label>
+        <input type="email" id="email" name="email" required>
+        
+        <label for="mbox_file">Upload your .mbox file:</label>
+        <input type="file" id="mbox_file" name="mbox_file" required>
+        
+        <button type="submit" class="submit-button">Process Emails</button>
+    </form>
 
-        <div id="loading">
-            <div>
-                <p>Processing your file...</p>
-                <div class="spinner"></div>
-            </div>
+    <div id="loading">
+        <div>
+            <p>Processing your file...</p>
+            <div class="spinner"></div>
         </div>
+    </div>
 
-        <script>
-            document.getElementById('uploadForm').addEventListener('submit', async function(event) {
-                event.preventDefault();
-                const formData = new FormData(this);
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            const formData = new FormData(this);
 
-                document.getElementById('loading').style.display = 'block';
+            document.getElementById('loading').style.display = 'block';
 
-                try {
-                    const request = await fetch('/analyze', {
-                        method: 'POST',
-                        body: formData
-                    });
-                    
-                    const response = await request.json();
-                    
-                    if (response.error) { 
-                        alert('Error processing emails: ' + response.error);
-                    } else {
-                        document.getElementById('loading').style.display = 'none';
-                        // window.location.href = '/dashboard';
-                    }
-                } catch (error) {
-                    alert('Error: ' + error.message);
+            try {
+                const request = await fetch('/analyze', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const response = await request.json();
+                
+                if (response.error) { 
+                    alert('Error processing emails: ' + response.error);
+                } else {
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('success-message').textContent = response.success;
+                    // window.location.href = '/dashboard';
                 }
-            });
-        </script>
-    {% endblock %}
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        });
+    </script>
+{% endblock %}

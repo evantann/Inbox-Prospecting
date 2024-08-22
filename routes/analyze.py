@@ -17,6 +17,8 @@ from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
 analyze = Blueprint('analyze', __name__)
 
+supabase = client()
+
 matplotlib.use('Agg') # Required for matplotlib to work with Flask
 
 UPLOAD_FOLDER = 'uploads/'
@@ -311,32 +313,40 @@ def process_message(message, email_meta, email_content, contact_names, interacti
     except Exception as e:
         print(f"Error processing message: {e}")
 
-def generate_tabular_data(email_meta, email_content, contact_names, interaction_counts, invitation_counts, first_email_dates, last_email_dates, sentiment_scores, relationship_summaries, monthly_interactions, user_initiation, personalization_scores, follow_up_rates, keywords, contact_response_times, user_response_times_by_contact, user_email, thread_lengths):
+def generate_tabular_data(email_meta, email_content, contact_names, interaction_counts, invitation_counts, first_email_dates, last_email_dates, sentiment_scores, relationship_summaries, monthly_interactions, user_initiation, personalization_scores, follow_up_rates, keywords, contact_response_times, user_response_times_by_contact, user_email, thread_lengths, account_id):
     try:
         data = [{
             'contact': contact_names.get(contact, 'N/A'),
             'email_address': contact if contact else 'N/A',
             'emails_exchanged': interaction_counts.get(contact, 0),
-            'number_of_invitations_received': invitation_counts.get(contact, 0),
-            'duration_known (months)': round(((last_email_dates.get(contact) - first_email_dates.get(contact)).days) / 30, 2) if first_email_dates.get(contact) and last_email_dates.get(contact) else 0,
+            'invitations_received': invitation_counts.get(contact, 0),
+            'time_known (months)': round(((last_email_dates.get(contact) - first_email_dates.get(contact)).days) / 30, 2) if first_email_dates.get(contact) and last_email_dates.get(contact) else 0,
             'sentiment_score': round(sentiment_scores.get(contact, 0), 2),
             'relationship_summary': relationship_summaries.get(contact, 'N/A'),
             'user_initiated': user_initiation.get(contact, False),
             'interaction_frequency (emails per month)': int(monthly_interactions.get(contact, 0)),
             'follow_up_rate (%)': int(follow_up_rates.get(contact, 0)),
-            "contact_response_time (hours)": round(contact_response_times.get(contact, 0), 2),
-            'average_response_time (hours)': round(user_response_times_by_contact.get(contact, 0), 2),
-            'average_email_chain_length': int(thread_lengths.get(contact, 0)),
+            "contact_avg_response_time (hours)": round(contact_response_times.get(contact, 0), 2),
+            'user_avg_response_time (hours)': round(user_response_times_by_contact.get(contact, 0), 2),
+            'average_email_thread_length': int(thread_lengths.get(contact, 0)),
             'keywords': keywords.get(contact, 'N/A'),
-            'personalization_score': round(personalization_scores.get(contact, 0) / (sum(1 for email in email_meta.get(contact, []) if user_email in email['From']) or 1), 2)
+            'personalization_score': round(personalization_scores.get(contact, 0) / (sum(1 for email in email_meta.get(contact, []) if user_email in email['From']) or 1), 2),
+            'account_id': account_id
 
         } for contact in email_content]
+
+        response = (
+            supabase.table("analysis")
+            .insert(data)
+            .execute()
+        )
+
         return data
     except Exception as e:
         print(f"Error generating tabular data: {e}")
         return []
 
-def main(data, user_email, nlp):
+def main(data, user_email, nlp, account_id):
     try:
         keywords = defaultdict(list)
         email_meta = defaultdict(list)
@@ -383,7 +393,7 @@ def main(data, user_email, nlp):
         output_data = generate_tabular_data(
             email_meta, email_content, contact_names, interaction_counts, invitation_counts,
             first_email_dates, last_email_dates, sentiment_scores, relationship_summaries, monthly_interactions, user_initiation,
-            personalization_scores, follow_up_rates, keywords, contact_response_times, user_response_times_by_contact, user_email, thread_lengths
+            personalization_scores, follow_up_rates, keywords, contact_response_times, user_response_times_by_contact, user_email, thread_lengths, account_id
         )
 
         return output_data
@@ -444,8 +454,8 @@ def extract_mbox(input_mbox, model, tokenizer):
         count = 0
         
         for message in in_mbox:
-            print(f"Extracting message #{count} of {len(in_mbox)}")
             count += 1
+            print(f"Extracting message #{count} of {len(in_mbox)}")
 
             from_address = str(message.get('From'))
             if any(word in from_address.lower() for word in BLOCKED_CONTACTS):
@@ -604,12 +614,15 @@ def process_inbox():
             .execute()
             )
         
-        inbox_id = (
+        query = (
             supabase.table("accounts")
             .select("id")
             .eq("email", user_email)
+            .eq("admin_id", admin_id)
             .execute()
         )
+
+        account_id = query.data[0]['id']
         
         nlp = spacy.load("en_core_web_sm")
         model_name = "mrm8488/bert-tiny-finetuned-sms-spam-detection"
@@ -619,10 +632,10 @@ def process_inbox():
         data = extract_mbox(file_path, model, tokenizer)
         
         try:
-            obj = main(data, user_email, nlp)
-            generate_plots(obj, user_email)
-            summary = generate_summary(obj)
-            return jsonify(summary), 200
+            main(data, user_email, nlp, account_id)
+            # generate_plots(obj, user_email)
+            # summary = generate_summary(obj)
+            return jsonify({"success": "Successfully uploaded inbox"}), 200
     
         except Exception as e:
             print(f'An error occurred at the analyze endpoint: {e}')
