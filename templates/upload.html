@@ -6,7 +6,6 @@
 
 {% block content %}
     <h1>Upload Your Inbox</h1>
-    <p id="success-message"></p>
     <form id="uploadForm" enctype="multipart/form-data">
         <label for="email">Enter your email address:</label>
         <input type="email" id="email" name="email" required>
@@ -14,7 +13,7 @@
         <label for="mbox_file">Upload your .mbox file:</label>
         <input type="file" id="mbox_file" name="mbox_file" required>
         
-        <button type="submit" class="submit-button">Process Emails</button>
+        <button type="submit" class="submit-button">Process Inbox</button>
     </form>
 
     <div id="loading">
@@ -40,13 +39,14 @@
                 const response = await request.json();
                 
                 if (response.error) { 
+                    document.getElementById('loading').style.display = 'none';
                     alert('Error processing emails: ' + response.error);
                 } else {
                     document.getElementById('loading').style.display = 'none';
-                    document.getElementById('success-message').textContent = response.success;
-                    // window.location.href = '/dashboard';
+                    alert(response.success)
                 }
             } catch (error) {
+                document.getElementById('loading').style.display = 'none';
                 alert('Error: ' + error.message);
             }
         });

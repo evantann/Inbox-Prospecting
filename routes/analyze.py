@@ -4,13 +4,10 @@ import spacy
 import torch
 import mailbox
 import matplotlib
-import pandas as pd
-import seaborn as sns
 import torch.nn.functional as F
-import matplotlib.pyplot as plt
 from datetime import datetime
 from textblob import TextBlob
-from supabaseClient import client
+from supabase_config import client
 from collections import defaultdict, Counter
 from flask import render_template, request, jsonify, Blueprint, session
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
@@ -320,14 +317,14 @@ def generate_tabular_data(email_meta, email_content, contact_names, interaction_
             'email_address': contact if contact else 'N/A',
             'emails_exchanged': interaction_counts.get(contact, 0),
             'invitations_received': invitation_counts.get(contact, 0),
-            'time_known (months)': round(((last_email_dates.get(contact) - first_email_dates.get(contact)).days) / 30, 2) if first_email_dates.get(contact) and last_email_dates.get(contact) else 0,
+            'months_known': round(((last_email_dates.get(contact) - first_email_dates.get(contact)).days) / 30, 2) if first_email_dates.get(contact) and last_email_dates.get(contact) else 0,
             'sentiment_score': round(sentiment_scores.get(contact, 0), 2),
             'relationship_summary': relationship_summaries.get(contact, 'N/A'),
             'user_initiated': user_initiation.get(contact, False),
-            'interaction_frequency (emails per month)': int(monthly_interactions.get(contact, 0)),
-            'follow_up_rate (%)': int(follow_up_rates.get(contact, 0)),
-            "contact_avg_response_time (hours)": round(contact_response_times.get(contact, 0), 2),
-            'user_avg_response_time (hours)': round(user_response_times_by_contact.get(contact, 0), 2),
+            'emails_per_month': int(monthly_interactions.get(contact, 0)),
+            'follow_up_rate_percentage': int(follow_up_rates.get(contact, 0)),
+            "contact_avg_response_time_hours": round(contact_response_times.get(contact, 0), 2),
+            'user_avg_response_time_hours': round(user_response_times_by_contact.get(contact, 0), 2),
             'average_email_thread_length': int(thread_lengths.get(contact, 0)),
             'keywords': keywords.get(contact, 'N/A'),
             'personalization_score': round(personalization_scores.get(contact, 0) / (sum(1 for email in email_meta.get(contact, []) if user_email in email['From']) or 1), 2),
@@ -337,14 +334,15 @@ def generate_tabular_data(email_meta, email_content, contact_names, interaction_
 
         response = (
             supabase.table("analysis")
-            .insert(data)
+            .upsert(
+                data,
+                on_conflict="email_address, account_id"
+            )
             .execute()
         )
 
-        return data
     except Exception as e:
         print(f"Error generating tabular data: {e}")
-        return []
 
 def main(data, user_email, nlp, account_id):
     try:
@@ -390,13 +388,11 @@ def main(data, user_email, nlp, account_id):
         calculate_contact_response_times(threads, contact_response_times, user_email)
         calculate_thread_length(threads, thread_lengths)
         
-        output_data = generate_tabular_data(
+        generate_tabular_data(
             email_meta, email_content, contact_names, interaction_counts, invitation_counts,
             first_email_dates, last_email_dates, sentiment_scores, relationship_summaries, monthly_interactions, user_initiation,
             personalization_scores, follow_up_rates, keywords, contact_response_times, user_response_times_by_contact, user_email, thread_lengths, account_id
         )
-
-        return output_data
 
     except Exception as e:
         print(f'An error occurred in main(): {e}')
@@ -526,67 +522,6 @@ def extract_mbox(input_mbox, model, tokenizer):
     except Exception as e:
         print(f'Error extracting mbox: {e}')
 
-
-def generate_plots(data, user_email):
-    try:
-        df = pd.DataFrame(data)
-
-        df_top_100 = df.sort_values(by='emails_exchanged', ascending=False).head(100)
-
-        # Histogram of Number of Interactions
-        plt.figure(figsize=(12, 6))
-        sns.histplot(df_top_100['emails_exchanged'], bins=50, kde=True, color='purple')
-        plt.title('Histogram of Number of Interactions')
-        plt.xlabel('Number of Interactions')
-        plt.ylabel('Frequency')
-        plt.grid(True)
-        plt.savefig(f'static/media/histogram_interactions_{user_email}.png')
-        plt.close()
-
-        # Pie Chart of Relationship Summary 
-        sentiment_counts = df['relationship_summary'].value_counts()
-        plt.figure(figsize=(8, 8))
-        plt.pie(sentiment_counts, labels=sentiment_counts.index, autopct='%1.1f%%', colors=['#66c2a5', '#fc8d62', '#8da0cb'])
-        plt.title('Sentiment Analysis Distribution')
-        plt.savefig(f'static/media/pie_chart_sentiment_analysis_{user_email}.png')
-        plt.close()
-
-        html_table = df.to_html(index=False)
-
-        with open(f"static/media/dataframe_{user_email}.html", "w") as file:
-            file.write(html_table)
-
-    except Exception as e:
-        print(f'Error generating plots: {e}')
-
-def generate_summary(data):
-    try:
-        df = pd.json_normalize(data)
-
-        df_filtered = df.loc[
-            (df['average_response_time (hours)'] > 0) &
-            (df['personalization_score'] > 0)
-        ]
-        
-        num_contacts_user_initiated_true = int(df['user_initiated'].sum())
-        average_response_time = df_filtered['average_response_time (hours)'].mean()
-        total_emails_exchanged = int(df['emails_exchanged'].sum())
-        average_sentiment_score = df['sentiment_score'].mean()
-        average_personalization_score = df_filtered['personalization_score'].mean()
-        average_emails_per_month = df['interaction_frequency (emails per month)'].mean()
-
-        return {
-            'num_initiations': num_contacts_user_initiated_true,
-            'total_emails_exchanged': total_emails_exchanged,
-            'avg_emails_per_month': round(average_emails_per_month, 2),
-            'avg_response_time': round(average_response_time, 2),
-            'avg_sentiment_score': round(average_sentiment_score, 2),
-            'avg_personalization_score': round(average_personalization_score, 2)
-        }
-
-    except Exception as e:
-        print(f'Error generating summary: {e}')
-
 @analyze.route('/', methods=['GET', 'POST'])
 def process_inbox():
     supabase = client()
@@ -633,8 +568,6 @@ def process_inbox():
         
         try:
             main(data, user_email, nlp, account_id)
-            # generate_plots(obj, user_email)
-            # summary = generate_summary(obj)
             return jsonify({"success": "Successfully uploaded inbox"}), 200
     
         except Exception as e:

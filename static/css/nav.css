@@ -26,17 +26,12 @@ body {
 .openbtn {
     font-size: 20px;
     cursor: pointer;
-    background-color: #111;
-    color: #f1f1f1;
     padding: 10px;
     border: none;
     position: fixed;
     top: 10px;
     left: 10px;
     z-index: 1;
-}
-.openbtn:hover {
-    background-color: #575757;
 }
 .content {
     transition: margin-left 0.5s;

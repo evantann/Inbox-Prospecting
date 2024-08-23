@@ -6,22 +6,22 @@ from dash.dependencies import Input, Output
 import dash_bootstrap_components as dbc
 from flask import Flask, redirect, url_for, session, render_template
 from routes.users import users
+from datetime import timedelta
 from routes.analyze import analyze
-from supabaseClient import client
+from supabase_config import client, retrieve_accounts
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.urandom(24)
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=1)
 
-# Register blueprints
 app.register_blueprint(users, url_prefix='/users')
 app.register_blueprint(analyze, url_prefix='/analyze')
 
 supabase = client()
 
-# Initialize Dash app with a Bootstrap theme
 dash_app = Dash(__name__, server=app, url_base_pathname='/dash/', external_stylesheets=[dbc.themes.BOOTSTRAP])
 
-# Custom styles
+# Dash styling
 custom_css = {
     "card": {
         "borderRadius": "10px",
@@ -45,9 +45,8 @@ custom_css = {
     },
 }
 
-# Updated Dash app layout with summary boxes fitting on one line
 dash_app.layout = dbc.Container([
-    dcc.Location(id='url', refresh=False),  # To capture the URL
+    dcc.Location(id='url', refresh=False),
     dbc.Row([
         dbc.Col(html.H1(id='dashboard-title', className='text-center my-4', style=custom_css["title"]), width=12)
     ]),
@@ -61,7 +60,7 @@ dash_app.layout = dbc.Container([
                     html.P(id='num_initiations', className='card-text', style=custom_css["card-text"])
                 ])
             ], className='shadow-sm mb-4', style=custom_css["card"]),
-        ], width=2),  # Set width to 2 out of 12
+        ], width=2),
         dbc.Col(className='summary-box', children=[
             dbc.Card([
                 dbc.CardBody([
@@ -69,7 +68,7 @@ dash_app.layout = dbc.Container([
                     html.P(id='num_emails', className='card-text', style=custom_css["card-text"])
                 ])
             ], className='shadow-sm mb-4', style=custom_css["card"]),
-        ], width=2),  # Set width to 2 out of 12
+        ], width=2),
         dbc.Col(className='summary-box', children=[
             dbc.Card([
                 dbc.CardBody([
@@ -77,7 +76,7 @@ dash_app.layout = dbc.Container([
                     html.P(id='avg_emails_per_month', className='card-text', style=custom_css["card-text"])
                 ])
             ], className='shadow-sm mb-4', style=custom_css["card"]),
-        ], width=2),  # Set width to 2 out of 12
+        ], width=2),
         dbc.Col(className='summary-box', children=[
             dbc.Card([
                 dbc.CardBody([
@@ -85,7 +84,7 @@ dash_app.layout = dbc.Container([
                     html.P(id='avg_response_time', className='card-text', style=custom_css["card-text"])
                 ])
             ], className='shadow-sm mb-4', style=custom_css["card"]),
-        ], width=2),  # Set width to 2 out of 12
+        ], width=2),
         dbc.Col(className='summary-box', children=[
             dbc.Card([
                 dbc.CardBody([
@@ -93,7 +92,7 @@ dash_app.layout = dbc.Container([
                     html.P(id='avg_sentiment_score', className='card-text', style=custom_css["card-text"])
                 ])
             ], className='shadow-sm mb-4', style=custom_css["card"]),
-        ], width=2),  # Set width to 2 out of 12
+        ], width=2),
         dbc.Col(className='summary-box', children=[
             dbc.Card([
                 dbc.CardBody([
@@ -101,7 +100,7 @@ dash_app.layout = dbc.Container([
                     html.P(id='avg_personalization_score', className='card-text', style=custom_css["card-text"])
                 ])
             ], className='shadow-sm mb-4', style=custom_css["card"]),
-        ], width=2),  # Set width to 2 out of 12
+        ], width=2),
     ], style=custom_css["container"]),
     
     # Row for the histogram, pie chart, and data table
@@ -114,11 +113,11 @@ dash_app.layout = dbc.Container([
     dbc.Row([
         dbc.Col(dash_table.DataTable(
             id='data_table',
-            columns=[],  # Columns will be set in the callback
-            data=[],     # Data will be set in the callback
-            filter_action='native',  # Enables search functionality
-            sort_action='native',    # Enables sort functionality
-            sort_mode='multi',       # Enables multi-column sorting
+            columns=[],
+            data=[],
+            filter_action='native',
+            sort_action='native',
+            sort_mode='multi',
             style_table={'overflowX': 'auto'},
             style_header={'backgroundColor': 'rgb(230, 230, 230)', 'fontWeight': 'bold'},
             style_cell={'textAlign': 'left', 'padding': '5px', 'whiteSpace': 'normal', 'height': 'auto'}
@@ -145,35 +144,27 @@ dash_app.layout = dbc.Container([
 def update_dashboard(pathname):
     account_id = pathname.split('/')[-2]
 
-    # Fetch data from Supabase
     data_query = supabase.table("analysis").select("*").eq("account_id", account_id).execute()
     data = data_query.data
 
     df = pd.DataFrame(data)
 
-    # Add an index column
     df['Index'] = df.index + 1
-
-    # Reorder the columns to place the index at the beginning
     df = df[['Index'] + [col for col in df.columns if col != 'Index']]
 
-    # Filter out unwanted columns (account_id, id)
     df_filtered = df.drop(columns=['account_id', 'id'])
 
-    # Prepare the table data
     table_columns = [{"name": i, "id": i} for i in df_filtered.columns]
     table_data = df_filtered.to_dict('records')
 
-    # Filtered data for specific analyses
     df_filtered_stats = df.loc[
-        (df['user_avg_response_time (hours)'] > 0) &
+        (df['user_avg_response_time_hours'] > 0) &
         (df['personalization_score'] > 0)
     ]
 
     df_top_100 = df.sort_values(by='emails_exchanged', ascending=False).head(100)
     fig_histogram = px.histogram(df_top_100, x='emails_exchanged', nbins=20, title='Distribution of Emails Exchanged')
 
-    # Create sentiment analysis pie chart
     sentiment_counts = df['relationship_summary'].value_counts()
     fig_pie_chart = px.pie(
         sentiment_counts, 
@@ -182,14 +173,23 @@ def update_dashboard(pathname):
         title='Sentiment Analysis Distribution'
     )
 
-    title = f'Dashboard for Account {account_id}'
+    response = (
+        supabase.table("accounts")
+        .select("email")
+        .eq("id", account_id)
+        .execute()
+    )
+
+    email = response.data[0]['email']
+
+    title = f'Inbox for {email}'
 
     num_contacts_user_initiated_true = int(df['user_initiated'].sum())
-    average_response_time = round(df_filtered_stats['user_avg_response_time (hours)'].mean(), 2)
+    average_response_time = round(df_filtered_stats['user_avg_response_time_hours'].mean(), 2)
     total_emails_exchanged = int(df['emails_exchanged'].sum())
     average_sentiment_score = round(df['sentiment_score'].mean(), 2)
     average_personalization_score = round(df_filtered_stats['personalization_score'].mean(), 2)
-    average_emails_per_month = round(df['interaction_frequency (emails per month)'].mean(), 2)
+    average_emails_per_month = round(df['emails_per_month'].mean(), 2)
 
     return (title,
             num_contacts_user_initiated_true,
@@ -207,33 +207,13 @@ def update_dashboard(pathname):
 @app.route('/dashboard/<account_id>')
 def dashboard(account_id):
     dash_url = f"/dash/{account_id}/"
-    user_id = session.get('user_id')
-
-    accounts_query = (
-        supabase.table("accounts")
-        .select("email", "id")
-        .eq("admin_id", user_id)
-        .execute()
-    )
-
-    accounts = accounts_query.data
-
+    accounts = retrieve_accounts()
     return render_template('dashboard.html', accounts=accounts, dash_url=dash_url)
 
 # Main index route
 @app.route('/dashboard')
 def index():
-    user_id = session.get('user_id')
-
-    query = (
-        supabase.table("accounts")
-        .select("email", "id")
-        .eq("admin_id", user_id)
-        .execute()
-    )
-
-    accounts = query.data
-
+    accounts = retrieve_accounts()
     return render_template('dashboard.html', accounts=accounts)
 
 # Root route to redirect to login

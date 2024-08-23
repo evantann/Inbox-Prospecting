@@ -11,12 +11,11 @@
 {% endblock %}
 
 {% block content %}
-    <!-- Embed the Dash dashboard -->
-    <h2>Account Dashboard</h2>
+    <h2>Warmy Dashboard</h2>
     
     {% if dash_url %}
         <iframe id="dashboard-container" src="{{ dash_url }}" width="100%" height="100%" frameborder="0"></iframe>
     {% else %}
-        <p>Select an inbox to view the dashboard.</p>
+        <h5>Select an inbox to view the dashboard.</h5>
     {% endif %}
 {% endblock %}

@@ -1,4 +1,4 @@
-from supabaseClient import client
+from supabase_config import client
 from flask import Blueprint, render_template, request, redirect, url_for, jsonify, session
 
 users = Blueprint('users', __name__)
