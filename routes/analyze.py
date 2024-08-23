@@ -3,7 +3,6 @@ import re
 import spacy
 import torch
 import mailbox
-import matplotlib
 import torch.nn.functional as F
 from datetime import datetime
 from textblob import TextBlob
@@ -15,8 +14,6 @@ from transformers import AutoModelForSequenceClassification, AutoTokenizer
 analyze = Blueprint('analyze', __name__)
 
 supabase = client()
-
-matplotlib.use('Agg') # Required for matplotlib to work with Flask
 
 UPLOAD_FOLDER = 'uploads/'
 

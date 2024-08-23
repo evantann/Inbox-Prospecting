@@ -11,12 +11,16 @@ from routes.analyze import analyze
 from supabase_config import client, retrieve_accounts
 
 app = Flask(__name__)
+
 app.config['SECRET_KEY'] = os.urandom(24)
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=1)
 app.config['SESSION_PERMANENT'] = True
 
 app.register_blueprint(users, url_prefix='/users')
 app.register_blueprint(analyze, url_prefix='/analyze')
+
+if not os.path.exists('uploads'):
+    os.makedirs('uploads')
 
 supabase = client()
 
