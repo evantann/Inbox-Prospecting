@@ -4,7 +4,7 @@ import plotly.express as px
 from dash import Dash, dcc, html, dash_table
 from dash.dependencies import Input, Output
 import dash_bootstrap_components as dbc
-from flask import Flask, redirect, url_for, session, render_template
+from flask import Flask, redirect, url_for, render_template, session
 from routes.users import users
 from datetime import timedelta
 from routes.analyze import analyze
@@ -12,7 +12,8 @@ from supabase_config import client, retrieve_accounts
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.urandom(24)
-app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=1)
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=1)
+app.config['SESSION_PERMANENT'] = True
 
 app.register_blueprint(users, url_prefix='/users')
 app.register_blueprint(analyze, url_prefix='/analyze')

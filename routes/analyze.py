@@ -574,12 +574,11 @@ def process_inbox():
             print(f'An error occurred at the analyze endpoint: {e}')
             return jsonify({'error': 'An error occurred during analysis. Please try again.'}), 500
         
-    user_id = session.get('user_id')
 
     query = (
         supabase.table("accounts")
         .select("email", "id")
-        .eq("admin_id", user_id)
+        .eq("admin_id", admin_id)
         .execute()
     )
 
