@@ -1,9 +1,11 @@
 import os
+import redis
 import pandas as pd
 import plotly.express as px
 import dash_bootstrap_components as dbc
 from routes.users import users
 from datetime import timedelta
+from flask_session import Session
 from routes.analyze import analyze
 from dash.dependencies import Input, Output
 from dash import Dash, dcc, html, dash_table
@@ -12,9 +14,14 @@ from flask import Flask, redirect, url_for, render_template
 
 app = Flask(__name__)
 
-app.config['SECRET_KEY'] = os.urandom(24)
-app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=1)
+app.config['SECRET_KEY'] = 'your_secret_key'
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=1) # SESSION_PERMANENT must be set to true for this config to apply
 app.config['SESSION_PERMANENT'] = True
+app.config['SESSION_TYPE'] = 'redis'
+app.config['SESSION_REDIS'] = redis.StrictRedis(host='localhost', port=6379)
+app.config['SESSION_USE_SIGNER'] = True
+
+Session(app)
 
 app.register_blueprint(users, url_prefix='/users')
 app.register_blueprint(analyze, url_prefix='/analyze')

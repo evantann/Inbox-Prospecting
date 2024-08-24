@@ -13,4 +13,13 @@ Problem: Dash runs its own web server.
 
 Iframes resolved 1. Using callbacks solved 2, 3.
 
-# Database
+# Deploy
+https://dev.to/stefanie-a/how-to-deploy-a-flask-app-on-digitalocean-3ib7
+
+# Redis
+sudo apt-get update
+sudo apt-get install redis-server
+sudo service redis-server start
+sudo nano /etc/redis/redis.conf
+    update bind configuration: bind 0.0.0.0
+sudo service redis-server restart
