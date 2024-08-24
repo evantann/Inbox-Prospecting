@@ -1,5 +1,5 @@
 from supabase_config import client
-from flask import Blueprint, render_template, request, redirect, url_for, jsonify, session
+from flask import Blueprint, render_template, request, redirect, url_for, session
 
 users = Blueprint('users', __name__)
 
@@ -38,7 +38,7 @@ def register():
                 'password': password
             })
             if response.user:
-                return redirect(url_for('users.login'))
+                return render_template('register.html', error='An email has been sent to you for verification.')
         except Exception as e:
             print(e)
             return render_template('register.html', error=e)

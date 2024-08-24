@@ -10,7 +10,7 @@
     <div class="container">
         <h2>Register</h2>
         {% if error %}
-            <p style="color: red;">{{ error }}</p>
+            <p>{{ error }}</p>
         {% endif %}
         <form action="{{ url_for('users.register') }}" method="POST">
             <div class="form-group">

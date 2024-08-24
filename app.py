@@ -1,14 +1,14 @@
 import os
 import pandas as pd
 import plotly.express as px
-from dash import Dash, dcc, html, dash_table
-from dash.dependencies import Input, Output
 import dash_bootstrap_components as dbc
-from flask import Flask, redirect, url_for, render_template, session
 from routes.users import users
 from datetime import timedelta
 from routes.analyze import analyze
+from dash.dependencies import Input, Output
+from dash import Dash, dcc, html, dash_table
 from supabase_config import client, retrieve_accounts
+from flask import Flask, redirect, url_for, render_template
 
 app = Flask(__name__)
 
