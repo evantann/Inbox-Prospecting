@@ -1,0 +1,54 @@
+{% extends "nav.html" %}
+
+{% block styles %}
+    <link rel="stylesheet" href="{{url_for ('static', filename='css/upload.css')}}">
+{% endblock %}
+
+{% block content %}
+    <h1>Upload Your Inbox</h1>
+    <form id="uploadForm" enctype="multipart/form-data">
+        <label for="email">Enter your email address:</label>
+        <input type="email" id="email" name="email" required>
+        
+        <label for="mbox_file">Upload your .mbox file:</label>
+        <input type="file" id="mbox_file" name="mbox_file" required>
+        
+        <button type="submit" class="submit-button">Process Inbox</button>
+    </form>
+
+    <div id="loading">
+        <div>
+            <p>Processing your file...</p>
+            <div class="spinner"></div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            const formData = new FormData(this);
+
+            document.getElementById('loading').style.display = 'block';
+
+            try {
+                const request = await fetch('/analyze', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const response = await request.json();
+                
+                if (response.error) { 
+                    document.getElementById('loading').style.display = 'none';
+                    alert('Error processing emails: ' + response.error);
+                } else {
+                    document.getElementById('loading').style.display = 'none';
+                    alert(response.success)
+                }
+            } catch (error) {
+                document.getElementById('loading').style.display = 'none';
+                alert('Error: ' + error.message);
+            }
+        });
+    </script>
+{% endblock %}
