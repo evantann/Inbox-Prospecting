@@ -24,20 +24,16 @@
     </div>
 
     <script>
+        const chunkSize = 1024 * 1024 * 1000 * 2; // 2GB chunk size
+
         document.getElementById('uploadForm').addEventListener('submit', async function(event) {
             event.preventDefault();
-            const formData = new FormData(this);
 
+            const file = document.getElementById('mbox_file').files[0];            
             document.getElementById('loading').style.display = 'block';
 
             try {
-                const request = await fetch('/analyze', {
-                    method: 'POST',
-                    body: formData
-                });
-                
-                const response = await request.json();
-                
+                const response = await uploadFileInChunks(file);                                
                 if (response.error) { 
                     document.getElementById('loading').style.display = 'none';
                     alert('Error processing emails: ' + response.error);
@@ -50,5 +46,49 @@
                 alert('Error: ' + error.message);
             }
         });
+
+        async function uploadFileInChunks(file) {
+            let start = 0;
+            let chunkId = 0;
+            const tmpName = (Math.random() + 1).toString(36).substring(2);
+
+            while (start < file.size) {
+                const chunk = file.slice(start, start + chunkSize);
+                await uploadChunk(tmpName, chunkId, chunk);
+                start += chunkSize;
+                chunkId++;
+            }
+
+            const response = await sendTerminateRequest(tmpName);
+            return response;
+        }
+
+        async function uploadChunk(tmpName, chunkId, chunk) {
+            const formData = new FormData();
+            formData.append('op', 'chunk_upload'); 
+            formData.append('filename', tmpName);
+            formData.append('chunkId', chunkId);
+            formData.append('file', chunk);
+
+            await fetch('/analyze', {
+                method: 'POST',
+                body: formData
+            });
+        }
+
+        async function sendTerminateRequest(tmpName) {
+            const formData = new FormData();
+            formData.append('op', 'finish');
+            formData.append('filename', tmpName);
+            formData.append('email', document.getElementById('email').value);
+
+            const request = await fetch('/analyze', {
+                method: 'POST',
+                body: formData
+            })
+            
+            const response = await request.json();
+            return response;
+        }
     </script>
 {% endblock %}
