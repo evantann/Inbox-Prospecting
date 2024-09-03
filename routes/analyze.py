@@ -1,5 +1,6 @@
 import os
 import re
+import json
 import spacy
 import torch
 import mailbox
@@ -16,6 +17,7 @@ analyze = Blueprint('analyze', __name__)
 supabase = client()
 
 UPLOAD_FOLDER = 'uploads/'
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 BLOCKED_CONTACTS = ['reply', 'support', 'notification', 'human resources', 'rewards', 'orders', 'alerts', 'talent', 'recruit', 'info', 'email', 'customer', 'account', 'admission', 'store', 'club', 'subscription', 'news', 'newsletter', 'product', 'updates', 'help', 'assistance', 'jury', 'careers', 'sale', 'response', 'guest', 'user', 'robot', 'confirm', 'automate', 'website', 'notice']
 
@@ -513,24 +515,39 @@ def extract_mbox(input_mbox, model, tokenizer):
                 
                 email_dict['Body'] = payload
                 processed_messages.append(email_dict)
-
+            
         return processed_messages
     
     except Exception as e:
         print(f'Error extracting mbox: {e}')
+
+def handle_chunk_upload():
+    chunk_id = request.form.get('chunkId')
+    filename = request.form.get('filename')
+    file = request.files['file']
+
+    file_path = os.path.join(UPLOAD_FOLDER, filename)
+
+    if not os.path.exists(file_path):
+        with open(file_path, 'wb') as f:
+            f.write(file.read())
+    else:
+        with open(file_path, 'ab') as f:
+            f.write(file.read())
 
 @analyze.route('/', methods=['GET', 'POST'])
 def process_inbox():
     supabase = client()
     admin_id = session.get('user_id')
     if request.method == 'POST':
+        op = request.form.get('op')
 
-        file = request.files['mbox_file']
+        if op == 'chunk_upload':
+            handle_chunk_upload()
+            return jsonify({'success': 'Chunk uploaded successfully'}), 200
+            
+        file_path = os.path.join(UPLOAD_FOLDER, f'{request.form["filename"]}')
         user_email = request.form['email']
-
-        if file:
-            file_path = os.path.join(UPLOAD_FOLDER, f'{user_email}.mbox')
-            file.save(file_path)
 
         response = (
             supabase.table("accounts")
