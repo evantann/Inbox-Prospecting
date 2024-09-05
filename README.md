@@ -1,25 +1,33 @@
-# Inbox_Prospecting
+# Inbox Prospecting
 
-This program is designed to identify and analyze contacts who have a close relationship with the user. It performs sentiment analysis on email content to evaluate each contact's sentiment towards the user and the nature of their relationship.
+![alt text][dashboard]
 
-# Steps:
+[dashboard]: https://github.com/evantann/Inbox-Prospecting/blob/master/Screenshot%202024-08-30%20233448.png
 
-# Challenges
-Problem: Dash runs its own web server.
+This web app helps users identify contacts with whom they have a close relationship with by analyzing their email inbox (mbox file). Users upload their mbox file for processing after which, an interactive dashboard will display the results. Metrics such as average response time, sentiment, and interaction frequency are factors in evaluating a contact's relationship with the user. Users can upload multiple inboxes and access a personalized dashboard for each account. 
 
-1. Doesn't natively work with Jinja templates.
-2. Had to create individual dash apps for each user.
-3. Dash apps had to be created before the Flask server processed any request (no dynamic dashboards).
+# Tech Stack:
+Front End: Plotly Dash  
+Back End: Flask  
+Database: Redis, PostgreSQL (Supabase)  
+Deployment: Docker, Nginx/Gunicorn, Digital Ocean  
+NLP: spacy, textblob, Hugging Face (https://huggingface.co/mrm8488/bert-tiny-finetuned-sms-spam-detection)
 
-Iframes resolved 1. Using callbacks solved 2, 3.
+# Server Environment
+### Nginx
+1. sudo apt install nginx -y
+2. sudo systemctl start nginx
+3. sudo nginx -s reload
 
-# Deploy
-https://dev.to/stefanie-a/how-to-deploy-a-flask-app-on-digitalocean-3ib7
-
-# Redis
-sudo apt-get update
-sudo apt-get install redis-server
-sudo service redis-server start
-sudo nano /etc/redis/redis.conf
-    update bind configuration: bind 0.0.0.0
-sudo service redis-server restart
+### Redis
+1. sudo apt-get update
+2. sudo apt-get install redis-server
+3. sudo service redis-server start
+4. sudo nano /etc/redis/redis.conf
+    `bind 127.0.0.1 ::0`
+5. sudo service redis-server restart  
+   
+### SSL Certificate
+1. sudo apt-get update
+2. sudo apt-get install certbot python3-certbot-nginx
+3. sudo certbot --nginx -d `your_ip_address`
