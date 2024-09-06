@@ -4,27 +4,29 @@ import pandas as pd
 import plotly.express as px
 import dash_bootstrap_components as dbc
 from routes.users import users
+from routes.blocked import blocked
 from datetime import timedelta
 from flask_session import Session
 from routes.analyze import analyze
 from dash.dependencies import Input, Output
 from dash import Dash, dcc, html, dash_table
 from supabase_config import client, retrieve_accounts
-from flask import Flask, redirect, url_for, render_template
+from flask import Flask, redirect, url_for, render_template, session
 
 app = Flask(__name__)
 
 app.config['SECRET_KEY'] = 'your_secret_key'
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=1) # SESSION_PERMANENT must be set to true for this config to apply
 app.config['SESSION_PERMANENT'] = True
-app.config['SESSION_TYPE'] = 'redis'
-app.config['SESSION_REDIS'] = redis.StrictRedis(host='localhost', port=6379)
+# app.config['SESSION_TYPE'] = 'redis'
+# app.config['SESSION_REDIS'] = redis.StrictRedis(host='localhost', port=6379)
 app.config['SESSION_USE_SIGNER'] = True
 
-Session(app)
+# Session(app)
 
 app.register_blueprint(users, url_prefix='/users')
 app.register_blueprint(analyze, url_prefix='/analyze')
+app.register_blueprint(blocked, url_prefix='/blocked')
 
 if not os.path.exists('uploads'):
     os.makedirs('uploads')
@@ -139,7 +141,7 @@ dash_app.layout = dbc.Container([
 ], fluid=True)
 
 # Dash app callback for updating the dashboard
-@dash_app.callback([
+@dash_app.callback([    
     Output('dashboard-title', 'children'),
     Output('num_initiations', 'children'),
     Output('num_emails', 'children'),
@@ -155,11 +157,24 @@ dash_app.layout = dbc.Container([
 )
 def update_dashboard(pathname):
     account_id = pathname.split('/')[-2]
+    admin_id = session.get('user_id')
+
+    blocked_contacts_query = (
+        supabase.table("blocked_contacts")
+        .select("email_address")
+        .eq("admin_id", admin_id)
+        .execute()
+    )
+
+    blocked_contacts = set()
+    for email in blocked_contacts_query.data:
+        blocked_contacts.add(email['email_address'])
 
     data_query = supabase.table("analysis").select("*").eq("account_id", account_id).execute()
     data = data_query.data
+    displayed_contacts = [obj for obj in data if obj['email_address'] not in blocked_contacts]
 
-    df = pd.DataFrame(data)
+    df = pd.DataFrame(displayed_contacts)
 
     df['Index'] = df.index + 1
     df = df[['Index'] + [col for col in df.columns if col != 'Index']]

@@ -1,0 +1,75 @@
+{% extends "nav.html" %}
+
+{% block styles %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/blocked.css') }}">
+{% endblock %}
+
+{% block content %}
+<h1>Block Email Addresses</h1>
+
+<form id="blockForm" action="{{ url_for('blocked.addToBlocked') }}" method="POST">
+    <div id="emailInputs">
+        <label for="email-1">Enter Email to Block:</label>
+        <input type="email" id="email-1" name="emails" required placeholder="Enter email address">
+    </div>
+    
+    <button type="button" id="addEmailBtn" class="block-btn block-btn-add">Add Another Email</button>
+    <button type="button" id="submitBtn" class="block-btn">Block</button>
+</form>
+
+<script>
+    let emailCount = 1;
+
+    document.getElementById('addEmailBtn').addEventListener('click', function() {
+        emailCount++;
+
+        const newEmailInput = document.createElement('input');
+        newEmailInput.type = 'email';
+        newEmailInput.id = `email-${emailCount}`;
+        newEmailInput.name = 'emails';
+        newEmailInput.required = true;
+        newEmailInput.placeholder = 'Enter email address';
+        newEmailInput.style.marginBottom = '16px';
+
+        document.getElementById('emailInputs').appendChild(newEmailInput);
+    });
+
+    document.getElementById('submitBtn').addEventListener('click', async function() {
+        const form = document.getElementById('blockForm');
+        const formData = new FormData(form);
+
+        // Validate form data
+        let allValid = true;
+        formData.forEach((value, key) => {
+            if (!value) {
+                allValid = false;
+            }
+        });
+
+        if (!allValid) {
+            alert('Please fill in all email addresses.');
+            return;
+        }
+
+        try {
+            const response = await fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'Accept': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                alert(result.success);
+            } else {
+                alert('Error blocking emails.');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('An unexpected error occurred.');
+        }
+    });
+</script>
+{% endblock %}

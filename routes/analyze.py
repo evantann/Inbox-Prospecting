@@ -1,6 +1,5 @@
 import os
 import re
-import json
 import spacy
 import torch
 import mailbox
