@@ -3,9 +3,10 @@ import re
 import spacy
 import torch
 import mailbox
+import pandas as pd
+import torch.nn.functional as F
 from datetime import datetime
 from textblob import TextBlob
-import torch.nn.functional as F
 from supabase_config import client
 from collections import defaultdict, Counter
 from flask import render_template, request, jsonify, Blueprint, session
@@ -225,6 +226,32 @@ def find_keywords(keywords, address, emails):
     except Exception as e:
         print(f"Error in finding keywords: {e}")
 
+def assign_tier(contact, last_email_dates, relationship_summaries):
+    current_date = pd.Timestamp(datetime.now()).tz_localize('UTC')
+    six_months_ago = current_date - pd.DateOffset(months=6)
+    last_contact_str = last_email_dates.get(contact, None)
+    sentiment = relationship_summaries.get(contact, 'N/A')
+    
+    if not last_contact_str or sentiment == 'N/A':
+        return 0
+
+    try:
+        last_contact = pd.to_datetime(last_contact_str, utc=True)
+    except Exception as e:
+        print(f"Error parsing date for contact {contact}: {e}")
+        return 0
+
+    active = six_months_ago <= last_contact
+    
+    if active and sentiment == 'positive':
+        return 1
+    elif not active and sentiment == 'positive':
+        return 2
+    elif active and sentiment == 'neutral':
+        return 3
+    else:
+        return 4
+
 def process_message(message, email_meta, email_content, contact_names, interaction_counts, invitation_counts, first_email_dates, last_email_dates, user_email):
     try:
         contacts = []
@@ -311,11 +338,13 @@ def process_message(message, email_meta, email_content, contact_names, interacti
 def generate_tabular_data(email_meta, email_content, contact_names, interaction_counts, invitation_counts, first_email_dates, last_email_dates, sentiment_scores, relationship_summaries, monthly_interactions, user_initiation, personalization_scores, follow_up_rates, keywords, contact_response_times, user_response_times_by_contact, user_email, thread_lengths, account_id):
     try:
         data = [{
+            'tier': assign_tier(contact, last_email_dates, relationship_summaries),
             'contact': contact_names.get(contact, 'N/A'),
             'email_address': contact if contact else 'N/A',
             'emails_exchanged': interaction_counts.get(contact, 0),
             'invitations_received': invitation_counts.get(contact, 0),
             'months_known': round(((last_email_dates.get(contact) - first_email_dates.get(contact)).days) / 30, 2) if first_email_dates.get(contact) and last_email_dates.get(contact) else 0,
+            'last_date_of_contact': str(last_email_dates.get(contact, 'N/A')),
             'sentiment_score': round(sentiment_scores.get(contact, 0), 2),
             'relationship_summary': relationship_summaries.get(contact, 'N/A'),
             'user_initiated': user_initiation.get(contact, False),
