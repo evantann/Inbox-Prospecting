@@ -8,6 +8,7 @@ import torch.nn.functional as F
 from datetime import datetime
 from textblob import TextBlob
 from supabase_config import client
+from werkzeug.utils import secure_filename
 from collections import defaultdict, Counter
 from flask import render_template, request, jsonify, Blueprint, session
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
@@ -17,6 +18,8 @@ analyze = Blueprint('analyze', __name__)
 supabase = client()
 
 UPLOAD_FOLDER = 'uploads/'
+CHUNK_FOLDER = os.path.join(UPLOAD_FOLDER, 'chunks')
+
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 BLOCKED_CONTACTS = ['reply', 'support', 'notification', 'human resources', 'rewards', 'orders', 'alerts', 'talent', 'recruit', 'info', 'email', 'customer', 'account', 'admission', 'store', 'club', 'subscription', 'news', 'newsletter', 'product', 'updates', 'help', 'assistance', 'jury', 'careers', 'sale', 'response', 'guest', 'user', 'robot', 'confirm', 'automate', 'website', 'notice']
@@ -563,19 +566,46 @@ def handle_chunk_upload():
         with open(file_path, 'ab') as f:
             f.write(file.read())
 
+@analyze.route('/upload-chunk', methods=['POST'])
+def upload_chunk():
+    file = request.files['file']
+    chunk_index = int(request.form['chunkIndex'])
+    total_chunks = int(request.form['totalChunks'])
+    file_id = request.form['fileId']
+
+    chunk_dir = os.path.join(CHUNK_FOLDER, file_id)
+    os.makedirs(chunk_dir, exist_ok=True)
+
+    chunk_file = os.path.join(chunk_dir, f'chunk_{chunk_index}')
+    file.save(chunk_file)
+
+    if chunk_index == total_chunks - 1:
+        filename = secure_filename(file_id)
+        with open(os.path.join(UPLOAD_FOLDER, filename), 'wb') as outfile:
+            for i in range(total_chunks):
+                chunk_file = os.path.join(chunk_dir, f'chunk_{i}')
+                with open(chunk_file, 'rb') as infile:
+                    outfile.write(infile.read())
+                os.remove(chunk_file)
+        os.rmdir(chunk_dir)
+
+    return jsonify({'success': True})
+
 @analyze.route('/', methods=['GET', 'POST'])
 def process_inbox():
     supabase = client()
     admin_id = session.get('user_id')
     if request.method == 'POST':
-        op = request.form.get('op')
-
-        if op == 'chunk_upload':
-            handle_chunk_upload()
-            return jsonify({'success': 'Chunk uploaded successfully'}), 200
+        # op = request.form.get('op')
+        # if op == 'chunk_upload':
+        #     handle_chunk_upload()
+        #     return jsonify({'success': 'Chunk uploaded successfully'}), 200
             
-        file_path = os.path.join(UPLOAD_FOLDER, f'{request.form["filename"]}')
-        user_email = request.form['email']
+        # file_path = os.path.join(UPLOAD_FOLDER, f'{request.form["filename"]}')
+        data = request.get_json()
+        file_id = data.get('file_id')
+        file_path = os.path.join(UPLOAD_FOLDER, f'{file_id}')
+        user_email = data.get('email')
 
         response = (
             supabase.table("accounts")

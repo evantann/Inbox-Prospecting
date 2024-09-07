@@ -16,80 +16,96 @@
         <button type="submit" class="submit-button">Process Inbox</button>
     </form>
 
-    <div id="loading">
-        <div>
-            <p>Processing your file...</p>
+    <div id="loading" style="display:none;">
+        <div id="loadingDiv">
+            <p>Uploading your file...</p>
             <div class="spinner"></div>
+            <p id="progressText">0%</p>
+            <progress id="progressBar" value="0" max="100"></progress>
         </div>
     </div>
 
     <script>
-        const chunkSize = 1024 * 1024 * 1000 * 2; // 2GB chunk size
 
         document.getElementById('uploadForm').addEventListener('submit', async function(event) {
             event.preventDefault();
+            const file = document.getElementById('mbox_file').files[0];
+            const email = document.getElementById('email').value;
 
-            const file = document.getElementById('mbox_file').files[0];            
-            document.getElementById('loading').style.display = 'block';
+            const loading = document.getElementById('loading');
+            const loadingDiv = document.getElementById('loadingDiv');
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+
+            loading.style.display = 'block';
 
             try {
-                const response = await uploadFileInChunks(file);                                
-                if (response.error) { 
-                    document.getElementById('loading').style.display = 'none';
+                const fileId = await uploadInChunks(file);
+
+                loadingDiv.innerHTML = `
+                    <p>Analyzing content...</p>
+                    <div class="spinner"></div>
+                `;
+                progressBar.style.display = 'none';
+                progressText.style.display = 'none';
+
+                const request = await fetch('/analyze', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ file_id: fileId, email: email })
+                });
+
+                const response = await request.json();
+
+                if (response.error) {
                     alert('Error processing emails: ' + response.error);
                 } else {
-                    document.getElementById('loading').style.display = 'none';
-                    alert(response.success)
+                    alert(response.success);
                     window.location.reload();
                 }
             } catch (error) {
-                document.getElementById('loading').style.display = 'none';
+                loadingDiv.style.display = 'none';
                 alert('Error: ' + error.message);
             }
         });
 
-        async function uploadFileInChunks(file) {
-            let start = 0;
-            let chunkId = 0;
-            const tmpName = (Math.random() + 1).toString(36).substring(2);
+        async function uploadInChunks(file, chunkSize = 100 * 1024 * 1024) { // 100MB chunks
+            const totalChunks = Math.ceil(file.size / chunkSize);
+            const fileId = Date.now().toString(); // Unique file identifier
 
-            while (start < file.size) {
-                const chunk = file.slice(start, start + chunkSize);
-                await uploadChunk(tmpName, chunkId, chunk);
-                start += chunkSize;
-                chunkId++;
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+
+            for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
+                const chunk = file.slice(chunkIndex * chunkSize, (chunkIndex + 1) * chunkSize);
+                const formData = new FormData();
+                formData.append('file', chunk, file.name);
+                formData.append('chunkIndex', chunkIndex);
+                formData.append('totalChunks', totalChunks);
+                formData.append('fileId', fileId);
+
+                try {
+                    const response = await fetch('/analyze/upload-chunk', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    const progress = Math.round((chunkIndex + 1) / totalChunks * 100);
+                    if (progressBar) progressBar.value = progress;
+                    if (progressText) progressText.textContent = `${progress}%`;
+                } catch (error) {
+                    console.error('Error uploading chunk:', error);
+                    throw error;
+                }
             }
 
-            const response = await sendTerminateRequest(tmpName);
-            return response;
-        }
-
-        async function uploadChunk(tmpName, chunkId, chunk) {
-            const formData = new FormData();
-            formData.append('op', 'chunk_upload'); 
-            formData.append('filename', tmpName);
-            formData.append('chunkId', chunkId);
-            formData.append('file', chunk);
-
-            await fetch('/analyze', {
-                method: 'POST',
-                body: formData
-            });
-        }
-
-        async function sendTerminateRequest(tmpName) {
-            const formData = new FormData();
-            formData.append('op', 'finish');
-            formData.append('filename', tmpName);
-            formData.append('email', document.getElementById('email').value);
-
-            const request = await fetch('/analyze', {
-                method: 'POST',
-                body: formData
-            })
-            
-            const response = await request.json();
-            return response;
+            return fileId;
         }
     </script>
 {% endblock %}
