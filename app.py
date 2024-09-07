@@ -4,27 +4,29 @@ import pandas as pd
 import plotly.express as px
 import dash_bootstrap_components as dbc
 from routes.users import users
+from routes.blocked import blocked
 from datetime import timedelta
 from flask_session import Session
 from routes.analyze import analyze
 from dash.dependencies import Input, Output
 from dash import Dash, dcc, html, dash_table
 from supabase_config import client, retrieve_accounts
-from flask import Flask, redirect, url_for, render_template
+from flask import Flask, redirect, url_for, render_template, session
 
 app = Flask(__name__)
 
 app.config['SECRET_KEY'] = 'your_secret_key'
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=1) # SESSION_PERMANENT must be set to true for this config to apply
 app.config['SESSION_PERMANENT'] = True
-app.config['SESSION_TYPE'] = 'redis'
-app.config['SESSION_REDIS'] = redis.StrictRedis(host='localhost', port=6379)
+# app.config['SESSION_TYPE'] = 'redis'
+# app.config['SESSION_REDIS'] = redis.StrictRedis(host='localhost', port=6379)
 app.config['SESSION_USE_SIGNER'] = True
 
-Session(app)
+# Session(app)
 
 app.register_blueprint(users, url_prefix='/users')
 app.register_blueprint(analyze, url_prefix='/analyze')
+app.register_blueprint(blocked, url_prefix='/blocked')
 
 if not os.path.exists('uploads'):
     os.makedirs('uploads')
@@ -139,7 +141,7 @@ dash_app.layout = dbc.Container([
 ], fluid=True)
 
 # Dash app callback for updating the dashboard
-@dash_app.callback([
+@dash_app.callback([    
     Output('dashboard-title', 'children'),
     Output('num_initiations', 'children'),
     Output('num_emails', 'children'),
@@ -155,15 +157,29 @@ dash_app.layout = dbc.Container([
 )
 def update_dashboard(pathname):
     account_id = pathname.split('/')[-2]
+    admin_id = session.get('user_id')
 
+    # Retrieve blocked contacts
+    blocked_contacts_query = (
+        supabase.table("blocked_contacts")
+        .select("email_address")
+        .eq("admin_id", admin_id)
+        .execute()
+    )
+
+    blocked_contacts = set()
+    for email in blocked_contacts_query.data:
+        blocked_contacts.add(email['email_address'])
+
+    # Retrieve analysis data
     data_query = supabase.table("analysis").select("*").eq("account_id", account_id).execute()
     data = data_query.data
 
-    df = pd.DataFrame(data)
-
+    # Construct DataFrame for display
+    displayed_contacts = [obj for obj in data if obj['email_address'] not in blocked_contacts]
+    df = pd.DataFrame(displayed_contacts)
     df['Index'] = df.index + 1
-    df = df[['Index'] + [col for col in df.columns if col != 'Index']]
-
+    df = df[['Index', 'tier'] + [col for col in df.columns if col != 'Index' and col != 'tier']]
     df_filtered = df.drop(columns=['account_id', 'id'])
 
     table_columns = [{"name": i, "id": i} for i in df_filtered.columns]
@@ -175,7 +191,8 @@ def update_dashboard(pathname):
     ]
 
     df_top_100 = df.sort_values(by='emails_exchanged', ascending=False).head(100)
-    fig_histogram = px.histogram(df_top_100, x='emails_exchanged', nbins=20, title='Distribution of Emails Exchanged')
+    num_bins = int(df_top_100['emails_exchanged'].max())
+    fig_histogram = px.histogram(df_top_100, x='emails_exchanged', nbins=num_bins, title='Distribution of Emails Exchanged')
 
     sentiment_counts = df['relationship_summary'].value_counts()
     fig_pie_chart = px.pie(
@@ -194,7 +211,7 @@ def update_dashboard(pathname):
 
     email = response.data[0]['email']
 
-    title = f'Inbox for {email}'
+    title = f'Inbox - {email}'
 
     num_contacts_user_initiated_true = int(df['user_initiated'].sum())
     average_response_time = round(df_filtered_stats['user_avg_response_time_hours'].mean(), 2)

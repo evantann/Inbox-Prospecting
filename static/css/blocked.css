@@ -1,0 +1,65 @@
+h1, h2 {
+    color: #333;
+}
+
+h1 {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 2.5em;
+    font-weight: 300;
+}
+
+form {
+    display: block;
+    max-width: 500px;
+    margin: 20px auto;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border: 1px solid #ddd;
+}
+
+label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: #555;
+}
+
+input[type="email"] {
+    width: calc(100% - 20px);
+    box-sizing: border-box;
+    margin-bottom: 16px;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 16px;
+}
+
+.block-btn {
+    display: block;
+    width: 100%;
+    padding: 12px;
+    border: none;
+    background: #111;
+    color: #ffffff;
+    border-radius: 8px;
+    font-size: 18px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.block-btn:hover {
+    background: #444;
+}
+
+.block-btn-add {
+    margin-bottom: 10px;
+    background-color: #007bff;
+}
+
+.block-btn-add:hover {
+    background-color: #0056b3;
+}
