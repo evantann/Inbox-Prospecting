@@ -2,7 +2,7 @@
 
 ![alt text][dashboard]
 
-[dashboard]: https://github.com/evantann/Inbox-Prospecting/blob/master/Screenshot%202024-08-30%20233448.png
+[dashboard]: https://github.com/evantann/Inbox-Prospecting/blob/master/Screenshot%202024-10-06%20103547.png
 
 This web app helps users identify contacts with whom they have a close relationship with by analyzing their email inbox (mbox file). Users upload their mbox file for processing after which, an interactive dashboard will display the results. Metrics such as average response time, sentiment, and interaction frequency are factors in evaluating a contact's relationship with the user. Users can upload multiple inboxes and access a personalized dashboard for each account. 
 
